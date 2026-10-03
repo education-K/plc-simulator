@@ -1,0 +1,1889 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PLC検定トレーナー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #e9ecea;
+  --surface: #f7f8f6;
+  --surface-2: #ffffff;
+  --ink: #1e2a2f;
+  --ink-2: #56636a;
+  --rule: #c4cbc8;
+  --wire: #2457a6;
+  --on: #22a04b;
+  --on-soft: #d4f1dc;
+  --amber: #f5a623;
+  --alarm: #d7362b;
+  --key: #fbfbfa;
+  --key-edge: #a9b2b0;
+  --cursor: #2457a6;
+  --ladder-bg: #ffffff;
+  --ladder-run: #f6fbf7;
+  --ladder-grid: #e7ebee;
+  --ladder-line: #1e2a2f;
+  --ladder-dev: #1d4f99;
+  --ladder-cmt: #8a5a00;
+  --ladder-rowno: #8a959c;
+  --ui: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --mono: "BIZ UDGothic", "Consolas", "Menlo", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171c1e; --surface: #20272a; --surface-2: #262e31; --ink: #e4ebe8; --ink-2: #9aa7ac;
+    --rule: #39444a; --wire: #6c9be0; --on: #3cc466; --on-soft: #1f3d29; --key: #2b3337; --key-edge: #4a565c;
+    --cursor: #6c9be0; --ladder-bg: #1b2124; --ladder-run: #1a2420; --ladder-grid: #2a3337;
+    --ladder-line: #d6dfdc; --ladder-dev: #8fb6ef; --ladder-cmt: #e0b25a; --ladder-rowno: #6f7c82;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171c1e; --surface: #20272a; --surface-2: #262e31; --ink: #e4ebe8; --ink-2: #9aa7ac;
+  --rule: #39444a; --wire: #6c9be0; --on: #3cc466; --on-soft: #1f3d29; --key: #2b3337; --key-edge: #4a565c;
+  --cursor: #6c9be0; --ladder-bg: #1b2124; --ladder-run: #1a2420; --ladder-grid: #2a3337;
+  --ladder-line: #d6dfdc; --ladder-dev: #8fb6ef; --ladder-cmt: #e0b25a; --ladder-rowno: #6f7c82;
+  color-scheme: dark;
+}
+
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.6 var(--ui); display: flex; flex-direction: column; min-height: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--wire); outline-offset: 2px; }
+
+/* ---------- 上部バー */
+.bar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--rule);
+}
+.brand { font-size: 17px; font-weight: 700; letter-spacing: .02em; margin-right: auto; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); margin-left: 10px; }
+.btn {
+  border: 1px solid var(--key-edge); background: var(--key); border-radius: 6px;
+  padding: 5px 12px; cursor: pointer; line-height: 1.4;
+}
+.btn:hover { border-color: var(--wire); }
+.btn.primary { background: var(--wire); border-color: var(--wire); color: #fff; }
+.group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+.mode {
+  display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px;
+  border: 1px solid var(--rule); border-radius: 8px; background: var(--surface-2);
+}
+.led { width: 12px; height: 12px; border-radius: 50%; background: #7d8a8f; box-shadow: inset 0 -2px 3px rgba(0,0,0,.3); }
+.mode.run .led { background: var(--on); box-shadow: 0 0 8px var(--on); }
+.mode-text { font: 700 13px var(--mono); min-width: 6.5em; }
+.btn.run { color: var(--on); font-weight: 700; }
+.btn.stop { color: var(--alarm); font-weight: 700; }
+
+/* ---------- 命令キー */
+.keys {
+  display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--rule);
+}
+.key {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 64px; padding: 3px 8px 4px; cursor: pointer;
+  background: var(--key); border: 1px solid var(--key-edge); border-bottom-width: 3px; border-radius: 6px;
+}
+.key:active { border-bottom-width: 1px; transform: translateY(2px); }
+.key kbd { font: 700 11px var(--mono); color: var(--ink-2); }
+.key span { font-size: 12px; white-space: nowrap; }
+.keys .sep { width: 1px; background: var(--rule); margin: 2px 4px; }
+
+/* ---------- 作業領域 */
+.work { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 560px; min-height: 0; }
+.ladder { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--rule); }
+.ladder-scroll { flex: 1; overflow: auto; min-height: 320px; background: var(--ladder-bg); }
+#ladder { display: block; outline: none; }
+#ladder:focus-visible { outline: 2px solid var(--wire); outline-offset: -2px; }
+.status {
+  padding: 6px 14px; font-size: 13px; color: var(--ink-2); background: var(--surface);
+  border-top: 1px solid var(--rule); min-height: 32px;
+}
+.status.warn { color: var(--alarm); }
+
+.side { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; background: var(--surface); }
+.board-wrap { padding: 10px 10px 4px; }
+#board { width: 100%; height: auto; display: block; user-select: none; -webkit-user-select: none; touch-action: none; }
+
+.tabs { display: flex; gap: 2px; padding: 0 10px; border-bottom: 1px solid var(--rule); }
+.tab {
+  border: 1px solid transparent; border-bottom: none; background: none; padding: 7px 14px;
+  cursor: pointer; color: var(--ink-2); border-radius: 6px 6px 0 0; margin-bottom: -1px;
+}
+.tab[aria-selected="true"] { background: var(--surface-2); border-color: var(--rule); color: var(--ink); font-weight: 700; }
+.panel { padding: 12px 14px 18px; background: var(--surface-2); flex: 1; }
+.panel[hidden] { display: none; }
+
+.task-head { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.task-head select { flex: 1 1 260px; padding: 5px 8px; border: 1px solid var(--key-edge); border-radius: 6px; background: var(--key); }
+.task-text { white-space: pre-wrap; margin: 0 0 10px; max-width: 46em; line-height: 1.75; }
+.iotable { border-collapse: collapse; font-size: 13px; margin: 6px 0 10px; }
+.iotable td, .iotable th { padding: 2px 10px 2px 0; text-align: left; }
+.iotable th { color: var(--ink-2); font-weight: 400; }
+.iotable td.addr { font-family: var(--mono); color: var(--wire); }
+details.hint { margin: 6px 0 12px; color: var(--ink-2); }
+details.hint summary { cursor: pointer; }
+.result { list-style: none; padding: 0; margin: 10px 0 0; }
+.result li { padding: 6px 0; border-top: 1px solid var(--rule); }
+.result .mark { display: inline-block; width: 1.6em; font-weight: 700; }
+.result .ok .mark { color: var(--on); }
+.result .ng .mark { color: var(--alarm); }
+.result .why { display: block; margin-left: 1.6em; color: var(--alarm); font-size: 13px; }
+.score { font-size: 16px; font-weight: 700; margin-top: 8px; }
+
+.scroll-x { overflow-x: auto; }
+table.mon { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.mon th { text-align: left; color: var(--ink-2); font-weight: 400; padding: 4px 6px; border-bottom: 1px solid var(--rule); }
+table.mon td { padding: 2px 6px; border-bottom: 1px solid var(--rule); }
+table.mon td.dev { font-family: var(--mono); color: var(--wire); white-space: nowrap; }
+table.mon td.val { font-family: var(--mono); white-space: nowrap; width: 8em; }
+table.mon tr.on td.val { color: var(--on); font-weight: 700; }
+table.mon input { width: 100%; border: 1px solid transparent; background: transparent; padding: 2px 4px; border-radius: 4px; }
+table.mon input:hover, table.mon input:focus { border-color: var(--key-edge); background: var(--key); }
+table.mon input:disabled { color: var(--ink); }
+.note { font-size: 12px; color: var(--ink-2); margin: 6px 0; }
+
+.wire-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.wire-grid h3 { font-size: 13px; margin: 0 0 4px; color: var(--ink-2); font-weight: 400; }
+.wire-row { display: grid; grid-template-columns: 2.2em 4.4em 1fr 5.6em; align-items: center; gap: 4px; padding: 1px 0; }
+.wire-row b { font-family: var(--mono); text-align: right; color: var(--ink-2); font-weight: 400; }
+.wire-row small { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wire-row input { font-family: var(--mono); width: 100%; padding: 2px 6px; border: 1px solid var(--key-edge); border-radius: 4px; background: var(--key); }
+.wire-row input.bad { border-color: var(--alarm); }
+.wire-tools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.wire-tools select { padding: 5px 8px; border: 1px solid var(--key-edge); border-radius: 6px; background: var(--key); max-width: 100%; }
+.err { color: var(--alarm); font-size: 13px; white-space: pre-wrap; }
+
+.bar, .keys, footer { flex-shrink: 0; }
+footer { padding: 8px 16px; font-size: 12px; color: var(--ink-2); background: var(--surface); border-top: 1px solid var(--rule); }
+
+/* ---------- ダイアログ */
+dialog {
+  border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px; background: var(--surface-2);
+  color: var(--ink); max-width: min(680px, calc(100vw - 24px)); box-shadow: 0 12px 40px rgba(0,0,0,.25);
+}
+dialog::backdrop { background: rgba(20, 28, 30, .35); }
+dialog h2 { font-size: 16px; margin: 0 0 10px; }
+.dlg-input { font: 18px var(--mono); width: 100%; padding: 8px 10px; border: 2px solid var(--wire); border-radius: 6px; background: var(--ladder-bg); }
+.help-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; font-size: 13px; margin: 8px 0; }
+.help-grid code { font-family: var(--mono); color: var(--wire); white-space: nowrap; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.help-body { max-height: 70vh; overflow: auto; font-size: 14px; }
+.help-body h3 { font-size: 14px; margin: 14px 0 4px; }
+.help-body p { margin: 4px 0; max-width: 44em; }
+
+@media (max-width: 1180px) {
+  .work { grid-template-columns: 1fr; flex: none; }
+  .ladder { border-right: none; border-bottom: 1px solid var(--rule); }
+  .ladder-scroll { height: 56vh; flex: none; }
+  .side { overflow: visible; }
+  .board-wrap { max-width: 640px; margin: 0 auto; width: 100%; }
+}
+@media (max-width: 760px) {
+  .keys { flex-wrap: nowrap; overflow-x: auto; }
+  .key { flex: none; }
+}
+@media (max-width: 560px) {
+  .wire-grid { grid-template-columns: 1fr; }
+  .brand small { display: none; }
+  .key { min-width: 54px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .key:active { transform: none; }
+}
+
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">PLC検定トレーナー<small>ラダーを作って、作業盤を動かして確かめる</small></div>
+  <div class="group">
+    <button class="btn" id="btnNew">新規</button>
+    <button class="btn" id="btnOpen">開く</button>
+    <button class="btn" id="btnSave">ファイルに保存</button>
+    <button class="btn" id="btnHelp">操作説明</button>
+  </div>
+  <div class="mode" id="mode">
+    <span class="led"></span><span class="mode-text" id="modeText">PROGRAM</span>
+    <button class="btn run" id="btnRun">RUN</button>
+    <button class="btn stop" id="btnStop">STOP</button>
+  </div>
+</header>
+
+<nav class="keys" id="keys" aria-label="命令の入力"></nav>
+
+<main class="work">
+  <section class="ladder" aria-label="ラダー図">
+    <div class="ladder-scroll" id="ladderScroll"><canvas id="ladder" tabindex="0" aria-label="ラダー編集領域。矢印キーで移動、F5でa接点"></canvas></div>
+    <div class="status" id="status" role="status"></div>
+  </section>
+  <aside class="side">
+    <div class="board-wrap"><svg id="board" viewBox="0 0 600 492" aria-label="作業盤"></svg></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="task" aria-selected="true">課題と判定</button>
+      <button class="tab" role="tab" data-tab="mon" aria-selected="false">モニタとコメント</button>
+      <button class="tab" role="tab" data-tab="wire" aria-selected="false">配線</button>
+    </div>
+    <div class="panel" id="tab-task" role="tabpanel">
+      <div class="task-head">
+        <select id="taskSel" aria-label="課題"></select>
+      </div>
+      <div class="task-head">
+        <button class="btn" id="btnTaskWire">配線を割付表どおりにする</button>
+        <button class="btn" id="btnTaskSample">解答例を開く</button>
+        <button class="btn primary" id="btnJudge">自動判定</button>
+      </div>
+      <div id="taskBody"></div>
+      <div id="judgeOut"></div>
+    </div>
+    <div class="panel" id="tab-mon" role="tabpanel" hidden>
+      <p class="note">RUN中は現在値を表示します。コメントはSTOP中に入力でき、ラダー上に表示されます。</p>
+      <div class="scroll-x"><table class="mon"><thead><tr><th>デバイス</th><th>現在値</th><th>コメント</th></tr></thead><tbody id="monBody"></tbody></table></div>
+    </div>
+    <div class="panel" id="tab-wire" role="tabpanel" hidden>
+      <p class="note">作業盤の端子台に、PLCのどのアドレスをつなぐかを入力します。空欄は未配線。数字だけでも入力できます（2 → R002）。</p>
+      <div class="wire-tools">
+        <select id="presetSel" aria-label="プリセット"></select>
+        <button class="btn" id="btnPreset">読み込む</button>
+        <button class="btn" id="btnWireClear">すべて外す</button>
+      </div>
+      <div class="wire-grid" id="wireGrid"></div>
+      <p><label><input type="checkbox" id="wireCmt" checked> 機器名をデバイスコメントに登録する（未設定のもののみ）</label></p>
+      <div class="err" id="wireErr"></div>
+      <button class="btn primary" id="btnWireApply">この配線にする</button>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  非公式の学習用ソフトです。キー操作は KV STUDIO（株式会社キーエンスの製品）を参考にしていますが、キーエンス社・作業盤メーカー・中央職業能力開発協会とは関係ありません。収録課題はすべてオリジナルです。
+</footer>
+
+<dialog id="dlgInput">
+  <h2>直接入力</h2>
+  <input class="dlg-input" id="inpText" autocomplete="off" spellcheck="false" aria-label="命令語とオペランド">
+  <div class="err" id="inpErr"></div>
+  <div class="help-grid" id="inpHelp"></div>
+  <div class="dlg-actions"><button class="btn" id="inpCancel">キャンセル</button><button class="btn primary" id="inpOk">入力</button></div>
+</dialog>
+
+<dialog id="dlgConfirm">
+  <h2 id="cfTitle"></h2>
+  <p id="cfText"></p>
+  <div class="dlg-actions"><button class="btn" id="cfNo">キャンセル</button><button class="btn primary" id="cfYes">OK</button></div>
+</dialog>
+
+<dialog id="dlgHelp">
+  <h2>操作説明</h2>
+  <div class="help-body" id="helpBody"></div>
+  <div class="dlg-actions"><button class="btn primary" id="helpClose">閉じる</button></div>
+</dialog>
+
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<script>
+/* PLC検定トレーナー 中核ロジック（デバイス・ラダー・スキャン演算・作業盤モデル） */
+const PLC = (() => {
+  "use strict";
+
+  // ================================================================ デバイス
+  const BIT_TYPES = ["R", "MR", "LR", "CR"];
+  const DEV_RE = /^(MR|LR|CR|DM|R|T|C)?(\d+)$/;
+
+  class DeviceError extends Error {}
+
+  function parseDevice(text, def = "R") {
+    const t = String(text).trim().toUpperCase().replace(/\s/g, "");
+    const m = DEV_RE.exec(t);
+    if (!m) throw new DeviceError(`デバイス「${text}」を解釈できません`);
+    const p = m[1] || def;
+    const n = parseInt(m[2], 10);
+    if (BIT_TYPES.includes(p)) {
+      if (n % 100 > 15) throw new DeviceError(`${p}${n}：下2桁（ビット番号）は 00〜15 です`);
+      return p + String(n).padStart(3, "0");
+    }
+    if (p === "T" || p === "C") {
+      if (n > 3999) throw new DeviceError(`${p}${n}：番号は 0〜3999 です`);
+      return p + n;
+    }
+    return "DM" + n;
+  }
+  const devType = (d) => DEV_RE.exec(d)[1] || "R";
+  const devNum = (d) => parseInt(DEV_RE.exec(d)[2], 10);
+  const bitIndex = (d) => { const n = devNum(d); return Math.floor(n / 100) * 16 + (n % 100); };
+  const fromBitIndex = (p, i) => p + String(Math.floor(i / 16) * 100 + (i % 16)).padStart(3, "0");
+
+  function parseConstant(text) {
+    const t = String(text).trim().toUpperCase();
+    if (t.startsWith("#")) return parseInt(t.slice(1), 10);
+    if (t.startsWith("$")) return parseInt(t.slice(1), 16);
+    return null;
+  }
+  function toBCD(v) {
+    v = Math.max(0, Math.min(Math.trunc(v), 9999));
+    let out = 0, sh = 0;
+    do { out |= (v % 10) << sh; v = Math.floor(v / 10); sh += 4; } while (v > 0);
+    return out;
+  }
+
+  class Memory {
+    constructor() { this.clear(); }
+    clear() { this.bits = {}; this.words = {}; this.timers = {}; this.counters = {}; this.firstScan = false; }
+    timer(n) { return this.timers[n] || (this.timers[n] = { preset: 0, unit: 100, elapsed: 0, done: false }); }
+    counter(n) { return this.counters[n] || (this.counters[n] = { preset: 0, count: 0, done: false, prev: false }); }
+    timerCurrent(ts) { return Math.max(0, ts.preset - Math.floor(ts.elapsed / ts.unit)); }
+    getBit(d) {
+      const t = devType(d);
+      if (t === "T") { const s = this.timers[devNum(d)]; return !!(s && s.done); }
+      if (t === "C") { const s = this.counters[devNum(d)]; return !!(s && s.done); }
+      if (t === "CR") {
+        const n = devNum(d);
+        if (n === 2002) return true;
+        if (n === 2003) return false;
+        if (n === 2008) return this.firstScan;
+      }
+      if (t === "DM") return (this.words[d] || 0) !== 0;
+      return !!this.bits[d];
+    }
+    setBit(d, v) {
+      const t = devType(d);
+      if (t === "T" || t === "C" || t === "DM") return;
+      if (t === "CR" && [2002, 2003, 2008].includes(devNum(d))) return;
+      this.bits[d] = !!v;
+    }
+    getWord(d) {
+      const t = devType(d);
+      if (t === "DM") return this.words[d] || 0;
+      if (t === "T") { const s = this.timers[devNum(d)]; return s ? this.timerCurrent(s) : 0; }
+      if (t === "C") { const s = this.counters[devNum(d)]; return s ? s.count : 0; }
+      const b = bitIndex(d); let v = 0;
+      for (let i = 0; i < 16; i++) if (this.bits[fromBitIndex(t, b + i)]) v |= 1 << i;
+      return v;
+    }
+    setWord(d, v) {
+      v = ((Math.trunc(v) % 65536) + 65536) % 65536;
+      const t = devType(d);
+      if (t === "DM") this.words[d] = v;
+      else if (t === "C") this.counter(devNum(d)).count = v;
+      else if (t === "T") return;
+      else { const b = bitIndex(d); for (let i = 0; i < 16; i++) this.bits[fromBitIndex(t, b + i)] = !!((v >> i) & 1); }
+    }
+    resetDevice(d) {
+      const t = devType(d);
+      if (t === "T") { const s = this.timer(devNum(d)); s.elapsed = 0; s.done = false; }
+      else if (t === "C") { const s = this.counter(devNum(d)); s.count = 0; s.done = false; }
+      else if (t === "DM") this.words[d] = 0;
+      else this.setBit(d, false);
+    }
+    describe(d) {
+      const t = devType(d);
+      if (t === "T") { const s = this.timers[devNum(d)]; return s ? `${s.done ? "ON " : "OFF"} ${this.timerCurrent(s)}/${s.preset}` : "OFF"; }
+      if (t === "C") { const s = this.counters[devNum(d)]; return s ? `${s.done ? "ON " : "OFF"} ${s.count}/${s.preset}` : "OFF"; }
+      if (t === "DM") return String(this.getWord(d));
+      return this.getBit(d) ? "ON" : "OFF";
+    }
+  }
+
+  // ================================================================ ラダー
+  const NCOL = 10;
+  const CONTACTS = ["NO", "NC", "P", "F"];
+  const COILS = ["OUT", "OUTB", "SET", "RES", "TMR", "TMH", "C", "DIFU", "DIFD", "MOV", "TBCD", "INC", "DEC"];
+  const MNEMONIC = { NO: "LD", NC: "LDB", P: "LDP", F: "LDF" };
+  const ALIASES = {
+    LD: ["NO", 0], A: ["NO", 0], AND: ["NO", 0], LDB: ["NC", 0], B: ["NC", 0], ANB: ["NC", 0],
+    LDP: ["P", 0], ANP: ["P", 0], LDF: ["F", 0], ANF: ["F", 0],
+    OR: ["NO", 1], ORB: ["NC", 1], ORP: ["P", 1], ORF: ["F", 1],
+    OUT: ["OUT", 0], O: ["OUT", 0], OUB: ["OUTB", 0], OUTB: ["OUTB", 0],
+    SET: ["SET", 0], RES: ["RES", 0], TMR: ["TMR", 0], TMH: ["TMH", 0], C: ["C", 0],
+    DIFU: ["DIFU", 0], DIFD: ["DIFD", 0], MOV: ["MOV", 0], TBCD: ["TBCD", 0], INC: ["INC", 0], DEC: ["DEC", 0],
+  };
+  const INSTRUCTION_HELP = [
+    ["A 0", "a接点（F5）  A 0 = LD R000"],
+    ["B 1", "b接点（Shift+F5）"],
+    ["LDP / LDF", "立上り／立下り微分接点"],
+    ["OR / ORB", "a接点OR／b接点OR（F4／Shift+F4）"],
+    ["O 300", "コイル（F7）  O 300 = OUT R300"],
+    ["OUB 300", "b接点コイル（Shift+F7）"],
+    ["SET / RES", "セット／リセット（RES T0、RES C0 も可）"],
+    ["TMR 0 #30", "タイマ 100ms単位（#30 = 3.0秒）"],
+    ["TMH 0 #150", "高速タイマ 10ms単位"],
+    ["C 0 #5 2", "カウンタ：R002の立上りを数える（条件OFFでリセット）"],
+    ["DIFU MR0", "立上りで1スキャンON（DIFD は立下り）"],
+    ["MOV #5 DM0", "転送（R300 は R300〜R315 の16ビット扱い）"],
+    ["TBCD C0 R306", "BCDに変換して転送（デジタル表示器用）"],
+    ["INC DM0", "+1（毎スキャン実行。DEC は -1）"],
+  ];
+
+  class Element {
+    constructor(kind, ops = []) { this.kind = kind; this.ops = ops.slice(); this.resetRuntime(); }
+    resetRuntime() { this.prev = false; this.on = false; this.power = false; }
+    isContact() { return CONTACTS.includes(this.kind); }
+    isCoil() { return COILS.includes(this.kind); }
+    mnemonic() { return [MNEMONIC[this.kind] || this.kind, ...this.ops].join(" "); }
+    toJSON() { return { k: this.kind, o: this.ops }; }
+  }
+
+  function constOp(t) {
+    const v = parseConstant(t);
+    if (v === null || isNaN(v)) {
+      if (/^\d+$/.test(String(t).trim())) return "#" + parseInt(t, 10);
+      throw new DeviceError(`設定値「${t}」は #10 のように入力してください`);
+    }
+    return "#" + v;
+  }
+  const valueOp = (t) => (parseConstant(t) !== null ? constOp(t) : parseDevice(t));
+  function writableBit(t) {
+    const d = parseDevice(t);
+    if (!["R", "MR", "LR"].includes(devType(d))) throw new DeviceError(`${d} には出力できません（R / MR / LR を使用）`);
+    return d;
+  }
+  function wordDest(t) {
+    const d = parseDevice(t);
+    if (["T", "CR"].includes(devType(d))) throw new DeviceError(`${d} には書込みできません`);
+    return d;
+  }
+
+  function parseInstruction(text) {
+    const parts = String(text).trim().toUpperCase().replace(/,/g, " ").split(/\s+/).filter(Boolean);
+    if (!parts.length) throw new DeviceError("命令語を入力してください");
+    const name = parts[0];
+    if (!ALIASES[name]) throw new DeviceError(`命令語「${parts[0]}」は使用できません`);
+    const [kind, isOr] = ALIASES[name];
+    const a = parts.slice(1);
+    const need = (n) => { if (a.length !== n) throw new DeviceError(`${name} はオペランドが ${n} 個必要です`); };
+    let ops;
+    if (CONTACTS.includes(kind)) { need(1); ops = [parseDevice(a[0])]; }
+    else if (["OUT", "OUTB", "SET", "DIFU", "DIFD"].includes(kind)) { need(1); ops = [writableBit(a[0])]; }
+    else if (kind === "RES") { need(1); ops = [parseDevice(a[0])]; }
+    else if (kind === "TMR" || kind === "TMH") {
+      need(2); ops = [parseDevice(a[0], "T"), constOp(a[1])];
+      if (devType(ops[0]) !== "T") throw new DeviceError("タイマ番号は T0 または 0 のように入力します");
+    } else if (kind === "C") {
+      need(3); ops = [parseDevice(a[0], "C"), constOp(a[1]), parseDevice(a[2])];
+      if (devType(ops[0]) !== "C") throw new DeviceError("カウンタ番号は C0 または 0 のように入力します");
+    } else if (kind === "MOV" || kind === "TBCD") { need(2); ops = [valueOp(a[0]), wordDest(a[1])]; }
+    else { need(1); ops = [wordDest(a[0])]; }
+    return { el: new Element(kind, ops), isOr: !!isOr };
+  }
+
+  class Program {
+    constructor(nrows = 24) {
+      this.rows = []; this.vlinks = []; this.comments = {}; this.rungs = [];
+      this.ensureRows(nrows);
+    }
+    nrows() { return this.rows.length; }
+    ensureRows(n) { while (this.rows.length < n) { this.rows.push(new Array(NCOL + 1).fill(null)); this.vlinks.push(new Set()); } }
+    insertRow(r) {
+      this.rows.splice(r, 0, new Array(NCOL + 1).fill(null));
+      this.vlinks.splice(r, 0, r > 0 ? new Set(this.vlinks[r - 1]) : new Set());
+    }
+    deleteRow(r) {
+      if (this.rows.length <= 1) { this.rows[0] = new Array(NCOL + 1).fill(null); this.vlinks[0] = new Set(); return; }
+      this.rows.splice(r, 1); this.vlinks.splice(r, 1); this.vlinks[this.vlinks.length - 1].clear();
+    }
+    lastUsedRow() {
+      for (let r = this.rows.length - 1; r >= 0; r--) if (this.rows[r].some(Boolean) || this.vlinks[r].size) return r;
+      return -1;
+    }
+    compile() {
+      this.rungs = [];
+      const n = this.rows.length;
+      let r = 0;
+      while (r < n) {
+        const s = r;
+        while (r < n - 1 && this.vlinks[r].size) r++;
+        let used = false;
+        for (let i = s; i <= r; i++) if (this.rows[i].some(Boolean)) used = true;
+        if (used) this.rungs.push([s, r]);
+        r++;
+      }
+      for (const row of this.rows) for (const e of row) if (e) e.resetRuntime();
+      return this.rungs;
+    }
+    *elements() { for (let r = 0; r < this.rows.length; r++) for (let c = 0; c <= NCOL; c++) if (this.rows[r][c]) yield [r, c, this.rows[r][c]]; }
+    usedDevices() {
+      const out = [];
+      for (const [, , e] of this.elements()) for (const o of e.ops) if (!o.startsWith("#") && !out.includes(o)) out.push(o);
+      return out;
+    }
+    check() {
+      const w = [], outs = {};
+      for (const [r, , e] of this.elements())
+        if (["OUT", "OUTB", "TMR", "TMH", "C"].includes(e.kind)) (outs[e.ops[0]] = outs[e.ops[0]] || []).push(r + 1);
+      for (const [d, rs] of Object.entries(outs)) if (rs.length > 1) w.push(`二重コイル：${d} が ${rs.join("・")} 行目で使われています`);
+      this.rows.forEach((row, r) => {
+        if (!row[NCOL] && row.slice(0, NCOL).some(Boolean)) {
+          const conn = this.vlinks[r].size || (r > 0 && this.vlinks[r - 1].size);
+          if (!conn) w.push(`${r + 1} 行目：コイル（出力命令）がありません`);
+        }
+      });
+      return w;
+    }
+    toJSON() {
+      const last = this.lastUsedRow();
+      return {
+        ncol: NCOL,
+        rows: this.rows.slice(0, last + 1).map((row) => row.map((e) => (e ? e.toJSON() : null))),
+        vlinks: this.vlinks.slice(0, last + 1).map((v) => [...v].sort((a, b) => a - b)),
+        comments: { ...this.comments },
+      };
+    }
+    static fromJSON(d) {
+      const p = new Program(0);
+      for (const row of d.rows || []) {
+        const cells = row.map((x) => (x ? new Element(x.k, x.o || []) : null));
+        while (cells.length < NCOL + 1) cells.push(null);
+        p.rows.push(cells.slice(0, NCOL + 1));
+      }
+      p.vlinks = (d.vlinks || []).map((v) => new Set(v));
+      while (p.vlinks.length < p.rows.length) p.vlinks.push(new Set());
+      p.comments = { ...(d.comments || {}) };
+      p.ensureRows(Math.max(24, p.rows.length + 8));
+      p.compile();
+      return p;
+    }
+    clone() { return Program.fromJSON(JSON.parse(JSON.stringify(this.toJSON()))); }
+  }
+
+  /** コードからラダーを組む補助（解答例用）。rows[1..] はOR分岐、joins は [行, 合流境界k] */
+  class LadderBuilder {
+    constructor(p) { this.p = p; this.r = 0; }
+    rung(rows, coil, joins = [], branchStart = {}) {
+      const p = this.p;
+      p.ensureRows(this.r + rows.length + 2);
+      rows.forEach((items, i) => {
+        const st = branchStart[i] || 0;
+        items.forEach((t, j) => { p.rows[this.r + i][st + j] = parseInstruction(t).el; });
+      });
+      const first = p.rows[this.r];
+      for (let c = 0; c < NCOL; c++) if (!first[c]) first[c] = new Element("H");
+      first[NCOL] = parseInstruction(coil).el;
+      for (const [i, k] of joins) {
+        for (let rr = this.r; rr < this.r + i; rr++) {
+          p.vlinks[rr].add(k);
+          if (branchStart[i]) p.vlinks[rr].add(branchStart[i]);
+        }
+        const row = p.rows[this.r + i];
+        for (let c = branchStart[i] || 0; c < k; c++) if (!row[c]) row[c] = new Element("H");
+      }
+      this.r += rows.length;
+      return this;
+    }
+  }
+
+  // ================================================================ スキャン演算
+  class Engine {
+    constructor(program, mem) { this.program = program; this.mem = mem; this.first = true; this.scanCount = 0; }
+    reset() { this.mem.clear(); this.program.compile(); this.first = true; this.scanCount = 0; }
+    scan(dt) {
+      this.mem.firstScan = this.first;
+      for (const [a, b] of this.program.rungs) this.evalRung(a, b, dt);
+      this.first = false; this.scanCount++;
+    }
+    evalRung(a, b, dt) {
+      const rows = this.program.rows, vl = this.program.vlinks;
+      const n = b - a + 1;
+      const cur = new Array(n).fill(true);
+      for (let k = 0; k <= NCOL; k++) {
+        if (k > 0) {
+          let i = 0;
+          while (i < n) {
+            let j = i;
+            while (j < n - 1 && vl[a + j].has(k)) j++;
+            if (j > i) { let v = false; for (let x = i; x <= j; x++) v = v || cur[x]; for (let x = i; x <= j; x++) cur[x] = v; }
+            i = j + 1;
+          }
+        }
+        if (k === NCOL) break;
+        for (let i = 0; i < n; i++) {
+          const e = rows[a + i][k];
+          if (!e) { cur[i] = false; continue; }
+          e.power = cur[i];
+          if (e.kind === "H") continue;
+          const closed = this.contact(e);
+          e.on = closed;
+          cur[i] = cur[i] && closed;
+        }
+      }
+      for (let i = 0; i < n; i++) {
+        const e = rows[a + i][NCOL];
+        if (e) { e.power = cur[i]; this.exec(e, cur[i], dt); }
+      }
+    }
+    contact(e) {
+      const v = this.mem.getBit(e.ops[0]);
+      switch (e.kind) {
+        case "NO": return v;
+        case "NC": return !v;
+        case "P": { const r = v && !e.prev; e.prev = v; return r; }
+        case "F": { const r = !v && e.prev; e.prev = v; return r; }
+      }
+      return false;
+    }
+    value(op) { const c = parseConstant(op); return c !== null ? c : this.mem.getWord(op); }
+    exec(e, p, dt) {
+      const m = this.mem, o = e.ops;
+      e.on = p;
+      switch (e.kind) {
+        case "OUT": m.setBit(o[0], p); break;
+        case "OUTB": m.setBit(o[0], !p); break;
+        case "SET": if (p) m.setBit(o[0], true); break;
+        case "RES": if (p) m.resetDevice(o[0]); break;
+        case "TMR": case "TMH": {
+          const ts = m.timer(devNum(o[0]));
+          ts.preset = parseConstant(o[1]); ts.unit = e.kind === "TMR" ? 100 : 10;
+          if (p) { const lim = ts.preset * ts.unit; ts.elapsed = Math.min(ts.elapsed + dt, lim); ts.done = ts.elapsed >= lim; }
+          else { ts.elapsed = 0; ts.done = false; }
+          break;
+        }
+        case "C": {
+          const cs = m.counter(devNum(o[0]));
+          cs.preset = parseConstant(o[1]);
+          const s = m.getBit(o[2]);
+          if (p) { if (s && !cs.prev) cs.count = Math.min(cs.count + 1, 65535); } else cs.count = 0;
+          cs.prev = s; cs.done = cs.count >= cs.preset;
+          break;
+        }
+        case "DIFU": m.setBit(o[0], p && !e.prev); e.prev = p; break;
+        case "DIFD": m.setBit(o[0], !p && e.prev); e.prev = p; break;
+        case "MOV": if (p) m.setWord(o[1], this.value(o[0])); break;
+        case "TBCD": if (p) m.setWord(o[1], toBCD(this.value(o[0]))); break;
+        case "INC": if (p) m.setWord(o[0], m.getWord(o[0]) + 1); break;
+        case "DEC": if (p) m.setWord(o[0], m.getWord(o[0]) - 1); break;
+      }
+    }
+  }
+
+  // ================================================================ 作業盤
+  const INPUTS = [
+    [1, "LS1", "コンベア右端"], [2, "LS2", "コンベア左端"], [3, "LS3", "予備"], [4, "LS4", "予備"], [5, "LS5", "予備"],
+    [6, "PB1", "押しボタン1"], [7, "PB2", "押しボタン2"], [8, "PB3", "押しボタン3"], [9, "PB4", "押しボタン4"],
+    [10, "PB5", "非常停止"], [11, "SS1", "連続運転"], [12, "SS0", "手動/自動"],
+    [13, "DSW-1", "デジタルSW 1"], [14, "DSW-2", "デジタルSW 2"], [15, "DSW-4", "デジタルSW 4"], [16, "DSW-8", "デジタルSW 8"],
+  ];
+  const OUTPUTS = [
+    [20, "RY1", "コンベア左行"], [21, "RY2", "コンベア右行"],
+    [22, "PL1", "表示灯1"], [23, "PL2", "表示灯2"], [24, "PL3", "表示灯3"], [25, "PL4", "表示灯4"],
+    [26, "DPL1-1", "表示器1 1"], [27, "DPL1-2", "表示器1 2"], [28, "DPL1-4", "表示器1 4"], [29, "DPL1-8", "表示器1 8"],
+    [30, "DPL2-1", "表示器2 1"], [31, "DPL2-2", "表示器2 2"], [32, "DPL2-4", "表示器2 4"], [33, "DPL2-8", "表示器2 8"],
+  ];
+  const TERM_NAME = {}, NAME_TERM = {}, TERM_DESC = {};
+  for (const [tb, n, d] of [...INPUTS, ...OUTPUTS]) { TERM_NAME[tb] = n; NAME_TERM[n] = tb; TERM_DESC[tb] = d; }
+
+  function presetFrom(inp, out) {
+    const w = {};
+    for (const [n, a] of Object.entries(inp)) w[NAME_TERM[n]] = a;
+    for (const [n, a] of Object.entries(out)) w[NAME_TERM[n]] = a;
+    return w;
+  }
+  const STD = "標準（入力1〜16→R000〜R015、出力20〜33→R300〜R313）";
+  const WIRING_PRESETS = {
+    [STD]: (() => {
+      const w = {};
+      INPUTS.forEach(([tb], i) => { w[tb] = "R" + String(i).padStart(3, "0"); });
+      OUTPUTS.forEach(([tb], i) => { w[tb] = "R" + String(300 + i).padStart(3, "0"); });
+      return w;
+    })(),
+    "課題A 割付表": presetFrom(
+      { PB1: "R000", PB2: "R001", PB3: "R002", SS0: "R003", LS1: "R004", LS2: "R005", PB4: "R006", PB5: "R007" },
+      { PL1: "R300", PL2: "R301", RY1: "R302", RY2: "R303", PL4: "R304",
+        "DPL1-1": "R306", "DPL1-2": "R307", "DPL1-4": "R308", "DPL1-8": "R309" }),
+  };
+
+  class Board {
+    constructor() { this.wiring = { ...WIRING_PRESETS[STD] }; this.reset(); }
+    reset() {
+      this.sw = {}; for (const [, n] of INPUTS) this.sw[n] = false;
+      this.locked = new Set(); this.dsw = 0; this.workPresent = true; this.workX = 100;
+      this.speed = 25; this.outputs = {}; for (const [, n] of OUTPUTS) this.outputs[n] = false;
+      this.motor = "停止"; this.alarm = ""; this.belt = 0;
+    }
+    setSwitch(n, v) { this.sw[n] = !!v; }
+    input(n) {
+      if (n === "LS1") return this.workPresent && this.workX >= 97;
+      if (n === "LS2") return this.workPresent && this.workX <= 3;
+      if (n.startsWith("DSW-")) return !!((this.dsw >> { "DSW-1": 0, "DSW-2": 1, "DSW-4": 2, "DSW-8": 3 }[n]) & 1);
+      return !!this.sw[n] || this.locked.has(n);
+    }
+    exchangeInputs(mem) {
+      const acc = {};
+      for (const [tb, n] of INPUTS) { const d = this.wiring[tb]; if (d) acc[d] = acc[d] || this.input(n); }
+      for (const [d, v] of Object.entries(acc)) mem.setBit(d, v);
+    }
+    exchangeOutputs(mem, running) {
+      for (const [tb, n] of OUTPUTS) { const d = this.wiring[tb]; this.outputs[n] = !!(running && d && mem.getBit(d)); }
+    }
+    dpl(k) { const o = this.outputs, p = `DPL${k}-`; return o[p + "1"] * 1 + o[p + "2"] * 2 + o[p + "4"] * 4 + o[p + "8"] * 8; }
+    step(dt) {
+      const l = this.outputs.RY1, r = this.outputs.RY2;
+      this.alarm = "";
+      if (l && r) { this.motor = "停止"; this.alarm = "RY1とRY2が同時にONしています（実機では短絡・故障の危険）"; return; }
+      const d = l ? -1 : r ? 1 : 0;
+      this.motor = d < 0 ? "左行" : d > 0 ? "右行" : "停止";
+      if (!d) return;
+      this.belt = (this.belt + d * this.speed * dt + 100) % 100;
+      if (this.workPresent) this.workX = Math.min(100, Math.max(0, this.workX + d * this.speed * dt));
+    }
+  }
+
+  return {
+    DeviceError, parseDevice, devType, devNum, parseConstant, toBCD, Memory,
+    NCOL, CONTACTS, COILS, Element, parseInstruction, Program, LadderBuilder, INSTRUCTION_HELP,
+    Engine, INPUTS, OUTPUTS, TERM_NAME, NAME_TERM, TERM_DESC, WIRING_PRESETS, STD, Board,
+  };
+})();
+if (typeof module !== "undefined") module.exports = PLC;
+
+/* 練習課題・解答例・自動判定 */
+const TASKS = (() => {
+  "use strict";
+  const P = (typeof PLC !== "undefined") ? PLC : require("./core.js");
+  const STEP = 10; // ms
+
+  class CheckFailed extends Error {}
+  const expect = (c, msg) => { if (!c) throw new CheckFailed(msg); };
+
+  class Harness {
+    constructor(progJSON, wiring) {
+      this.program = P.Program.fromJSON(progJSON);
+      this.mem = new P.Memory();
+      this.plc = new P.Engine(this.program, this.mem);
+      this.plc.reset();
+      this.board = new P.Board();
+      this.board.wiring = { ...wiring };
+      this.t = 0; this.bothOn = false;
+    }
+    set(n, v) { this.board.setSwitch(n, v); }
+    tap(n, hold = 0.2) { this.set(n, true); this.run(hold); this.set(n, false); this.run(0.1); }
+    place(x) { this.board.workX = x; }
+    out(n) { return this.board.outputs[n]; }
+    inp(n) { return this.board.input(n); }
+    dpl() { return this.board.dpl(2) * 10 + this.board.dpl(1); }
+    run(sec) { const n = Math.max(1, Math.round(sec * 1000 / STEP)); for (let i = 0; i < n; i++) this.step(); }
+    runUntil(cond, timeout) {
+      const t0 = this.t;
+      while (this.t - t0 < timeout) { this.step(); if (cond()) return this.t - t0; }
+      return null;
+    }
+    step() {
+      this.board.exchangeInputs(this.mem);
+      this.plc.scan(STEP);
+      this.board.exchangeOutputs(this.mem, true);
+      if (this.out("RY1") && this.out("RY2")) this.bothOn = true;
+      this.board.step(STEP / 1000);
+      this.t += STEP / 1000;
+    }
+  }
+
+  function runChecks(cases, progJSON, wiring, required) {
+    const missing = required.filter((n) => !wiring[P.NAME_TERM[n]]);
+    if (missing.length) return [["配線チェック", false, "未配線の機器があります：" + missing.join("、")]];
+    return cases.map(([title, fn]) => {
+      const h = new Harness(progJSON, wiring);
+      try {
+        fn(h);
+        if (h.bothOn) throw new CheckFailed("RY1とRY2が同時にONしました（インタロック不足）");
+        return [title, true, "OK"];
+      } catch (ex) {
+        return [title, false, ex instanceof CheckFailed ? ex.message : "実行エラー：" + ex.message];
+      }
+    });
+  }
+
+  const build = (fn) => { const p = new P.Program(); fn(new P.LadderBuilder(p)); return p; };
+
+  // ---------------------------------------------------------------- 練習1
+  const selfhold = {
+    id: "selfhold", title: "練習1　自己保持回路", wiring: P.STD,
+    text: "PB1 を押すと PL1 が点灯し、手を離しても点灯し続ける。\nPB2 を押すと PL1 が消灯する。\nPB1 と PB2 を同時に押したときは消灯させる（停止優先）。",
+    comments: { R005: "PB1 起動", R006: "PB2 停止", R302: "PL1" },
+    required: ["PB1", "PB2", "PL1"],
+    hint: "1行目：A 5 → B 6 → O 302。2行目の先頭で F4 → 302 と入力すると自己保持になります。",
+    sample: () => build((b) => b.rung([["A R005", "B R006"], ["A R302"]], "O R302", [[1, 1]])),
+    checks: () => [
+      ["PB1で点灯し、離しても点灯し続ける", (h) => {
+        h.tap("PB1"); expect(h.out("PL1"), "PB1を押してもPL1が点灯しません");
+        h.run(1); expect(h.out("PL1"), "PB1を離すとPL1が消えます（自己保持になっていません）");
+      }],
+      ["PB2で消灯する", (h) => {
+        h.tap("PB1"); expect(h.out("PL1"), "（前提）PB1で点灯しないため判定できません");
+        h.tap("PB2"); expect(!h.out("PL1"), "PB2を押してもPL1が消灯しません");
+        h.run(0.5); expect(!h.out("PL1"), "PB2を離すと再点灯します");
+      }],
+      ["同時押しは停止優先", (h) => {
+        h.set("PB2", true); h.set("PB1", true); h.run(0.3);
+        expect(!h.out("PL1"), "PB1とPB2を同時に押すと点灯します（停止優先になっていません）");
+        h.set("PB1", false); h.set("PB2", false); h.run(0.1); h.tap("PB1");
+        expect(h.out("PL1"), "（前提）PB1で点灯しないため判定できません");
+      }],
+    ],
+  };
+
+  // ---------------------------------------------------------------- 練習2
+  const timer = {
+    id: "timer", title: "練習2　オンディレイタイマ", wiring: P.STD,
+    text: "PB1 を押すと運転状態を記憶し、その3秒後に PL2 を点灯する。\nPB2 を押すと PL2 を消灯し、タイマもリセットする。",
+    comments: { R005: "PB1 起動", R006: "PB2 停止", R303: "PL2", MR000: "運転中", T0: "3秒タイマ" },
+    required: ["PB1", "PB2", "PL2"],
+    hint: "TMR 0 #30（100ms単位なので #30 = 3.0秒）。タイマの接点は T0。",
+    sample: () => build((b) => {
+      b.rung([["A R005", "B R006"], ["A MR000"]], "O MR000", [[1, 1]]);
+      b.rung([["A MR000"]], "TMR 0 #30");
+      b.rung([["A T0"]], "O R303");
+    }),
+    checks: () => [
+      ["PB1から約3秒後にPL2点灯", (h) => {
+        h.tap("PB1"); h.run(2.4); expect(!h.out("PL2"), "3秒より早くPL2が点灯しました");
+        expect(h.runUntil(() => h.out("PL2"), 1.5) !== null, "PB1を押して3秒経ってもPL2が点灯しません");
+      }],
+      ["PB2で消灯・タイマリセット", (h) => {
+        h.tap("PB1"); h.run(3.5); expect(h.out("PL2"), "（前提）PL2が点灯しないため判定できません");
+        h.tap("PB2"); expect(!h.out("PL2"), "PB2を押してもPL2が消灯しません");
+        h.run(4); expect(!h.out("PL2"), "PB2の後、再びPL2が点灯しました");
+      }],
+    ],
+  };
+
+  // ---------------------------------------------------------------- 練習3
+  const counter = {
+    id: "counter", title: "練習3　カウンタとデジタル表示", wiring: P.STD,
+    text: "PB1 を押した回数をデジタル表示器（DPL2：十の位、DPL1：一の位）に表示する。\n5回以上になったら PL3 を点灯する。PB2 で 0 に戻す。",
+    comments: { R005: "PB1 計数", R006: "PB2 リセット", R304: "PL3", C0: "押した回数" },
+    required: ["PB1", "PB2", "PL3", "DPL1-1", "DPL1-2", "DPL1-4", "DPL1-8", "DPL2-1", "DPL2-2", "DPL2-4", "DPL2-8"],
+    hint: "C 0 #5 R005（実行条件がOFFでリセット）、表示は TBCD C0 R306（R306〜R313へBCDで出力）。",
+    sample: () => build((b) => {
+      b.rung([["B R006"]], "C 0 #5 R005");
+      b.rung([["A CR2002"]], "TBCD C0 R306");
+      b.rung([["A C0"]], "O R304");
+    }),
+    checks: () => [
+      ["押した回数を表示・5回でPL3", (h) => {
+        for (let i = 0; i < 3; i++) h.tap("PB1");
+        expect(h.dpl() === 3, `PB1を3回押したとき表示が3になりません（表示 ${h.dpl()}）`);
+        expect(!h.out("PL3"), "5回未満でPL3が点灯しています");
+        h.tap("PB1"); h.tap("PB1"); expect(h.out("PL3"), "5回押してもPL3が点灯しません");
+      }],
+      ["2桁表示（12回）", (h) => {
+        for (let i = 0; i < 12; i++) h.tap("PB1");
+        expect(h.dpl() === 12, `12回押したとき表示が12になりません（表示 ${h.dpl()}）`);
+      }],
+      ["PB2でリセット", (h) => {
+        for (let i = 0; i < 6; i++) h.tap("PB1");
+        expect(h.dpl() === 6, "（前提）回数が表示されないため判定できません");
+        h.tap("PB2"); expect(h.dpl() === 0 && !h.out("PL3"), "PB2で0に戻りません");
+      }],
+    ],
+  };
+
+  // ---------------------------------------------------------------- 課題A（オリジナル）
+  const A_TEXT =
+`次の①〜⑥の動作をするプログラムを作成し、作業盤で動作を確認すること。ただし条件イ〜ニを満たすこと。
+
+① SS0 が「手動」のとき、PB2 を押している間だけコンベアは左行する。
+② SS0 が「手動」のとき、PB3 を押している間だけコンベアは右行する。
+③ SS0 が「自動」のとき、PB1 を押すと次の動作を1サイクルとして行う（以下「サイクル運転」）。
+　・ワークを右行させる。
+　・ワークが右端に着いたらコンベアを止める。
+　・止まってから約2秒後、ワークを左行させる。
+　・ワークが左端に着いたらコンベアを止め、サイクル運転を終える。
+④ サイクル運転中は PL2 を点灯させる。サイクル運転を終えた回数をデジタル表示器 DPL1 に表示する（9回まで）。
+⑤ PB5 を押したら異常として、コンベアとサイクル運転を直ちに止め、PL4 を点灯させる。
+⑥ PB4 を押すと異常を解除し、PL4 を消灯させる。
+
+イ コンベアが動いている間は PL1 を点灯させる。
+ロ ワークが左端にないときは、PB1 を押してもサイクル運転を始めない。
+ハ 異常中（PL4点灯中）は、PB1・PB2・PB3 を押してもコンベアを動かさない。
+ニ サイクル運転中に SS0 を「手動」に切り替えたら、サイクル運転を直ちに止める。
+　 また、起動ボタン以外の操作（異常解除・自動への切替など）でコンベアが動き出してはならない。
+
+SS0：ON＝自動、OFF＝手動　LS1：右端　LS2：左端　RY1：左行　RY2：右行`;
+
+  const A_COMMENTS = {
+    R000: "PB1 自動起動", R001: "PB2 手動左行", R002: "PB3 手動右行", R003: "SS0 自動",
+    R004: "LS1 右端", R005: "LS2 左端", R006: "PB4 異常解除", R007: "PB5 非常停止",
+    R300: "PL1 運転中", R301: "PL2 サイクル中", R302: "RY1 左行", R303: "RY2 右行", R304: "PL4 異常",
+    R306: "DPL1 回数表示",
+  };
+
+  const autoStart = (h) => { h.set("SS0", true); h.place(0); h.run(0.2); h.tap("PB1"); };
+
+  const taskA = {
+    id: "taskA", title: "検定形式　課題A　コンベア往復と回数表示", wiring: "課題A 割付表",
+    text: A_TEXT, comments: A_COMMENTS,
+    required: ["LS1", "LS2", "PB1", "PB2", "PB3", "PB4", "PB5", "SS0", "RY1", "RY2", "PL1", "PL2", "PL4",
+      "DPL1-1", "DPL1-2", "DPL1-4", "DPL1-8"],
+    hint: "異常記憶 → サイクル運転中 → 右端到達記憶 → 2秒タイマ → サイクル完了 → RY2 → RY1 → 表示灯 → カウンタの順に作ると整理しやすくなります。",
+    sample: () => {
+      const p = build((b) => {
+        b.rung([["A R007", "B R006"], ["A MR100"]], "O MR100", [[1, 1]]);
+        b.rung([["A MR100"]], "O R304");
+        b.rung([["A R000", "A R005", "A R003", "B MR100", "B MR010"], ["A MR000"]], "O MR000", [[1, 2]]);
+        b.rung([["A MR000", "A R004"], ["A MR002"]], "O MR002", [[1, 2]], { 1: 1 });
+        b.rung([["A MR002"]], "TMR 0 #20");
+        b.rung([["A MR002", "A T0", "A R005"]], "O MR010");
+        b.rung([["A R002", "B R003", "B MR100", "B R302"], ["A MR000", "B MR002"]], "O R303", [[1, 2]]);
+        b.rung([["A R001", "B R003", "B MR100", "B R303"], ["A T0", "B R005"]], "O R302", [[1, 2]]);
+        b.rung([["A R302"], ["A R303"]], "O R300", [[1, 1]]);
+        b.rung([["A MR000"]], "O R301");
+        b.rung([["A CR2002"]], "C 0 #99 MR010");
+        b.rung([["A CR2002"]], "TBCD C0 R306");
+      });
+      p.comments = { ...A_COMMENTS, MR000: "サイクル運転中", MR002: "右端到達記憶", MR010: "サイクル完了",
+        MR100: "異常記憶", T0: "右端停止2秒", C0: "完了回数" };
+      return p;
+    },
+    checks: () => [
+      ["① 手動 PB2 押している間 左行／イ PL1", (h) => {
+        h.place(60); h.set("PB2", true); h.run(0.3);
+        expect(h.out("RY1"), "手動でPB2を押してもRY1（左行）がONしません");
+        expect(h.out("PL1"), "コンベア動作中にPL1が点灯しません（条件イ）");
+        h.set("PB2", false); h.run(0.2);
+        expect(!h.out("RY1"), "PB2を離してもコンベアが止まりません");
+        expect(!h.out("PL1"), "停止中もPL1が点灯しています");
+      }],
+      ["② 手動 PB3 押している間 右行", (h) => {
+        h.place(40); h.set("PB3", true); h.run(0.3);
+        expect(h.out("RY2"), "手動でPB3を押してもRY2（右行）がONしません");
+        h.set("PB3", false); h.run(0.2);
+        expect(!h.out("RY2"), "PB3を離してもコンベアが止まりません");
+      }],
+      ["③④ サイクル運転（右行→右端で約2秒停止→左行→左端で終了）・PL2", (h) => {
+        autoStart(h);
+        expect(h.out("RY2"), "自動でPB1を押してもRY2（右行）がONしません");
+        expect(h.out("PL2"), "サイクル運転中にPL2が点灯しません（④）");
+        expect(h.runUntil(() => h.inp("LS1"), 8) !== null, "ワークが右端に到達しません");
+        h.run(0.1);
+        expect(!h.out("RY1") && !h.out("RY2"), "右端到達でコンベアが停止しません");
+        const t = h.runUntil(() => h.out("RY1"), 4);
+        expect(t !== null, "右端で停止後、左行しません");
+        expect(t + 0.1 >= 1.6 && t + 0.1 <= 2.6, `右端での停止時間が約2秒ではありません（${(t + 0.1).toFixed(1)}秒）`);
+        expect(h.runUntil(() => h.inp("LS2"), 8) !== null, "ワークが左端に戻りません");
+        h.run(0.1);
+        expect(!h.out("RY1") && !h.out("RY2"), "左端到達でコンベアが停止しません");
+        expect(!h.out("PL2"), "サイクル終了後もPL2が点灯しています");
+        h.run(2);
+        expect(!h.out("RY1") && !h.out("RY2"), "サイクル終了後にコンベアが再び動きました");
+      }],
+      ["④ 回数表示（2サイクルで 2）", (h) => {
+        for (let i = 1; i <= 2; i++) {
+          autoStart(h);
+          expect(h.runUntil(() => h.inp("LS1"), 8) !== null, "（前提）サイクル運転が動かないため判定できません");
+          h.runUntil(() => h.inp("LS2"), 12); h.run(0.3);
+          expect(h.dpl() === i, `${i}サイクル後の表示が ${i} ではありません（表示 ${h.dpl()}）`);
+        }
+      }],
+      ["ロ 左端にないと起動しない", (h) => {
+        h.set("SS0", true); h.place(50); h.run(0.2); h.tap("PB1"); h.run(1);
+        expect(!h.out("RY1") && !h.out("RY2"), "ワークが左端にないのにサイクル運転が始まりました（条件ロ）");
+        h.place(0); h.run(0.2); h.tap("PB1");
+        expect(h.out("RY2"), "（前提）左端からも起動しないため判定できません");
+      }],
+      ["⑤ PB5 で即停止・PL4 点灯", (h) => {
+        autoStart(h); h.run(1);
+        expect(h.out("RY2"), "（前提）サイクル運転が始まらないため判定できません");
+        h.tap("PB5");
+        expect(!h.out("RY1") && !h.out("RY2"), "PB5でコンベアが直ちに停止しません（⑤）");
+        expect(h.out("PL4"), "PB5を押してもPL4が点灯しません（⑤）");
+        h.run(1); expect(!h.out("RY1") && !h.out("RY2"), "異常停止後にコンベアが動き出しました");
+      }],
+      ["ハ 異常中は動かない", (h) => {
+        h.run(0.2); h.tap("PB5"); h.set("SS0", true); h.place(0); h.run(0.2); h.tap("PB1"); h.run(0.5);
+        expect(!h.out("RY2"), "異常中にサイクル運転が始まりました（条件ハ）");
+        h.set("SS0", false); h.place(50);
+        h.set("PB2", true); h.run(0.3); expect(!h.out("RY1"), "異常中に手動PB2で左行しました（条件ハ）");
+        h.set("PB2", false); h.set("PB3", true); h.run(0.3); expect(!h.out("RY2"), "異常中に手動PB3で右行しました（条件ハ）");
+        h.set("PB3", false); h.tap("PB4"); h.set("PB3", true); h.run(0.3);
+        expect(h.out("RY2"), "（前提）異常解除後に手動運転できないため判定できません");
+      }],
+      ["⑥ PB4 で解除／ニ 勝手に動き出さない", (h) => {
+        autoStart(h); h.run(1);
+        expect(h.out("RY2"), "（前提）サイクル運転が始まらないため判定できません");
+        h.tap("PB5"); h.tap("PB4");
+        expect(!h.out("PL4"), "PB4を押してもPL4が消灯しません（⑥）");
+        h.run(1.5); expect(!h.out("RY1") && !h.out("RY2"), "異常解除だけでコンベアが動き出しました（条件ニ）");
+      }],
+      ["ニ サイクル中に手動へ切替で即停止", (h) => {
+        autoStart(h); h.run(1);
+        expect(h.out("RY2"), "（前提）サイクル運転が始まらないため判定できません");
+        h.set("SS0", false); h.run(0.1);
+        expect(!h.out("RY1") && !h.out("RY2"), "サイクル中に手動へ切り替えても止まりません（条件ニ）");
+        h.run(0.5); h.set("SS0", true); h.run(1.5);
+        expect(!h.out("RY1") && !h.out("RY2"), "自動に戻しただけでコンベアが動き出しました（条件ニ）");
+      }],
+    ],
+  };
+
+  const LIST = [selfhold, timer, counter, taskA];
+  return {
+    LIST, Harness,
+    judge: (task, progJSON, wiring) => runChecks(task.checks(), progJSON, wiring, task.required),
+    presetWiring: (task) => ({ ...P.WIRING_PRESETS[task.wiring] }),
+  };
+})();
+if (typeof module !== "undefined") module.exports = TASKS;
+
+/* 画面 */
+(() => {
+  "use strict";
+  const P = PLC, NCOL = P.NCOL;
+  const $ = (id) => document.getElementById(id);
+  const STORE_KEY = "plc-trainer:v1";
+
+  // ================================================================ 状態
+  const S = {
+    program: new P.Program(),
+    mem: new P.Memory(),
+    board: new P.Board(),
+    engine: null,
+    running: false,
+    undo: [],
+    r: 0, c: 0,
+  };
+  S.engine = new P.Engine(S.program, S.mem);
+
+  function setProgram(p) {
+    S.program = p; S.engine.program = p; p.compile();
+    S.r = Math.min(S.r, p.nrows() - 1);
+    drawLadder(); rebuildMonitor();
+  }
+  function pushUndo() { S.undo.push(JSON.stringify(S.program.toJSON())); if (S.undo.length > 100) S.undo.shift(); }
+  function undo() {
+    if (S.running || !S.undo.length) return;
+    const n = S.program.nrows();
+    const p = P.Program.fromJSON(JSON.parse(S.undo.pop()));
+    p.ensureRows(n);
+    setProgram(p); changed();
+  }
+  let saveTimer = 0;
+  function changed() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(autosave, 400);
+    rebuildMonitorSoon();
+  }
+  function autosave() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(projectJSON())); } catch (e) { /* 保存できない環境 */ }
+  }
+  function projectJSON() {
+    return { app: "PLC検定トレーナー", version: 1, program: S.program.toJSON(), wiring: S.board.wiring, task: taskSel.value };
+  }
+  function loadProject(d) {
+    const p = P.Program.fromJSON(d.program || {});
+    const w = {};
+    for (const [k, v] of Object.entries(d.wiring || {})) { try { w[+k] = P.parseDevice(v); } catch (e) { /* 無視 */ } }
+    stop();
+    S.r = 0; S.c = 0; S.undo = [];
+    setProgram(p);
+    S.board.wiring = w;
+    fillWiring();
+  }
+
+  let statusTimer = 0;
+  function status(msg, warn = false) {
+    const el = $("status");
+    el.textContent = msg; el.classList.toggle("warn", warn);
+    clearTimeout(statusTimer);
+    if (warn) statusTimer = setTimeout(() => status(DEFAULT_STATUS), 4000);
+  }
+  const DEFAULT_STATUS = "F5：a接点　F4：OR　F7：コイル　F8：縦線　英字キーで直接入力（A 0 → LD R000）";
+
+  // ================================================================ ダイアログ
+  function confirmBox(title, text) {
+    return new Promise((res) => {
+      const d = $("dlgConfirm");
+      $("cfTitle").textContent = title; $("cfText").textContent = text;
+      const done = (v) => { d.close(); res(v); };
+      $("cfYes").onclick = () => done(true);
+      $("cfNo").onclick = () => done(false);
+      d.oncancel = (e) => { e.preventDefault(); done(false); };
+      d.showModal();
+    });
+  }
+
+  let inputCallback = null;
+  function askInput(initial, cb) {
+    if (S.running) { status("RUN中は編集できません。STOPしてから編集してください。", true); return; }
+    inputCallback = cb;
+    const d = $("dlgInput"), inp = $("inpText");
+    inp.value = initial; $("inpErr").textContent = "";
+    d.showModal();
+    inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+  }
+  function inputOk() {
+    try { inputCallback($("inpText").value); }
+    catch (e) { $("inpErr").textContent = e.message; return; }
+    $("dlgInput").close();
+  }
+  $("inpOk").onclick = inputOk;
+  $("inpCancel").onclick = () => $("dlgInput").close();
+  $("inpText").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); inputOk(); } });
+  $("dlgInput").addEventListener("close", () => canvas.focus());
+  for (const [a, b] of P.INSTRUCTION_HELP) {
+    const c = document.createElement("code"); c.textContent = a;
+    const s = document.createElement("span"); s.textContent = b;
+    $("inpHelp").append(c, s);
+  }
+
+  // ================================================================ ラダーエディタ
+  let CW = 76;
+  const COILW = 190, RH = 58, LM = 46, TOP = 8;
+  const canvas = $("ladder"), scroller = $("ladderScroll");
+  const ctx = canvas.getContext("2d");
+  const ymid = (r) => TOP + r * RH + Math.round(RH * 0.58);
+  const xcell = (c) => LM + c * CW;
+  const xr = () => LM + NCOL * CW + COILW;
+
+  function tokens() {
+    const cs = getComputedStyle(document.documentElement);
+    const g = (n) => cs.getPropertyValue(n).trim();
+    return {
+      bg: g(S.running ? "--ladder-run" : "--ladder-bg"), grid: g("--ladder-grid"), line: g("--ladder-line"),
+      dev: g("--ladder-dev"), cmt: g("--ladder-cmt"), rowno: g("--ladder-rowno"), on: g("--on"),
+      onSoft: g("--on-soft"), cursor: g("--cursor"), mono: g("--mono"), ui: g("--ui"),
+    };
+  }
+
+  function drawLadder() {
+    const avail = scroller.clientWidth || 900;
+    CW = Math.max(56, Math.min(76, Math.floor((avail - LM - COILW - 24) / NCOL)));
+    const XR = xr();
+    const p = S.program, n = p.nrows();
+    const W = XR + 20, H = TOP + n * RH + 20;
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(H * dpr)) {
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    }
+    const t = tokens();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = t.bg; ctx.fillRect(0, 0, W, H);
+    ctx.lineCap = "butt";
+    // 罫線
+    ctx.lineWidth = 1; ctx.strokeStyle = t.grid;
+    for (let r = 0; r < n; r++) line(LM, TOP + (r + 1) * RH + .5, XR, TOP + (r + 1) * RH + .5);
+    ctx.setLineDash([2, 4]);
+    for (let k = 1; k <= NCOL; k++) line(xcell(k) + .5, TOP, xcell(k) + .5, TOP + n * RH);
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.rowno; ctx.font = `11px ${t.mono}`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (let r = 0; r < n; r++) ctx.fillText(String(r + 1), LM - 9, ymid(r));
+    // 母線
+    ctx.strokeStyle = t.line; ctx.lineWidth = 3; line(LM, TOP, LM, TOP + n * RH);
+    ctx.lineWidth = 2; ctx.globalAlpha = .45; line(XR, TOP, XR, TOP + n * RH); ctx.globalAlpha = 1;
+    for (const [r, c, e] of p.elements()) drawEl(r, c, e, t);
+    ctx.strokeStyle = t.line; ctx.lineWidth = 2;
+    for (let r = 0; r < n - 1; r++) for (const k of p.vlinks[r]) line(xcell(k), ymid(r), xcell(k), ymid(r + 1));
+    // カーソル
+    const x0 = xcell(S.c), w = S.c < NCOL ? CW : COILW;
+    ctx.strokeStyle = t.cursor; ctx.lineWidth = 2;
+    ctx.strokeRect(x0 + 2, TOP + S.r * RH + 3, w - 4, RH - 6);
+  }
+  function line(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  function text(s, x, y, color, font, align = "center") {
+    ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+  }
+  function clip(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+  function drawEl(r, c, e, t) {
+    const y = ymid(r), x0 = xcell(c), run = S.running, cm = S.program.comments, XR = xr();
+    const nc = Math.max(4, Math.floor(CW / 10.5));
+    ctx.strokeStyle = t.line; ctx.lineWidth = 2;
+    if (c < NCOL) {
+      const x1 = x0 + CW;
+      if (e.kind === "H") { line(x0, y, x1, y); return; }
+      const a = x0 + CW * .38, b = x0 + CW * .62;
+      if (run && e.on) { ctx.fillStyle = t.on; ctx.fillRect(a, y - 11, b - a, 22); }
+      line(x0, y, a, y); line(b, y, x1, y); line(a, y - 11, a, y + 11); line(b, y - 11, b, y + 11);
+      if (e.kind === "NC") line(a - 3, y + 11, b + 3, y - 11);
+      if (e.kind === "P" || e.kind === "F") text(e.kind === "P" ? "↑" : "↓", (a + b) / 2, y, t.line, `700 13px ${t.ui}`);
+      const d = e.ops[0];
+      text(d, (x0 + x1) / 2, y - 21, t.dev, `700 12px ${t.mono}`);
+      if (cm[d]) text(clip(cm[d], nc), (x0 + x1) / 2, y + 20, t.cmt, `10px ${t.ui}`);
+      return;
+    }
+    if (e.kind === "OUT" || e.kind === "OUTB") {
+      const cx = XR - 48;
+      line(x0, y, cx - 13, y); line(cx + 13, y, XR, y);
+      ctx.beginPath(); ctx.arc(cx, y, 13, 0, Math.PI * 2);
+      if (run && e.power) { ctx.fillStyle = t.on; ctx.fill(); }
+      ctx.stroke();
+      if (e.kind === "OUTB") line(cx - 9, y + 9, cx + 9, y - 9);
+      const d = e.ops[0];
+      text(d, cx, y - 23, t.dev, `700 12px ${t.mono}`);
+      if (cm[d]) text(clip(cm[d], 12), cx - 20, y + 20, t.cmt, `10px ${t.ui}`, "right");
+      return;
+    }
+    const bx0 = x0 + 10, bx1 = XR - 8;
+    line(x0, y, bx0, y);
+    ctx.fillStyle = run && e.power ? t.onSoft : t.bg;
+    ctx.fillRect(bx0, y - 13, bx1 - bx0, 26); ctx.strokeRect(bx0, y - 13, bx1 - bx0, 26);
+    text(e.mnemonic(), (bx0 + bx1) / 2, y, t.dev, `700 12px ${t.mono}`);
+    const d = e.ops[0];
+    let sub = cm[d] || "";
+    if (run && ["TMR", "TMH", "C"].includes(e.kind)) sub = S.mem.describe(d) + (sub ? "  " + sub : "");
+    if (sub) text(clip(sub, 24), (bx0 + bx1) / 2, y + 21, t.cmt, `10px ${t.ui}`);
+  }
+
+  function cellAt(x, y) {
+    const r = Math.min(Math.max(0, Math.floor((y - TOP) / RH)), S.program.nrows() - 1);
+    const c = x >= xcell(NCOL) ? NCOL : Math.max(0, Math.floor((x - LM) / CW));
+    return [r, c];
+  }
+  function moveTo(r, c) {
+    S.program.ensureRows(r + 4);
+    S.r = Math.max(0, Math.min(r, S.program.nrows() - 1));
+    S.c = Math.max(0, Math.min(c, NCOL));
+    drawLadder(); seeCursor();
+  }
+  function seeCursor() {
+    const y0 = TOP + S.r * RH, x0 = xcell(S.c);
+    if (y0 < scroller.scrollTop) scroller.scrollTop = y0 - 4;
+    else if (y0 + RH > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y0 + RH - scroller.clientHeight + 4;
+    const w = S.c < NCOL ? CW : COILW;
+    if (x0 < scroller.scrollLeft) scroller.scrollLeft = x0 - LM;
+    else if (x0 + w > scroller.scrollLeft + scroller.clientWidth) scroller.scrollLeft = x0 + w - scroller.clientWidth + 8;
+  }
+
+  function guard() {
+    if (S.running) { status("RUN中は編集できません。STOPしてから編集してください。", true); return false; }
+    return true;
+  }
+  function applyText(txt) {
+    const { el, isOr } = P.parseInstruction(txt);
+    pushUndo(); putElement(el, isOr);
+  }
+  function putElement(el, isOr) {
+    const p = S.program;
+    let r = S.r, c = S.c;
+    if (el.isContact()) {
+      if (c >= NCOL) c = NCOL - 1;
+      p.rows[r][c] = el;
+      if (isOr && r > 0) { p.vlinks[r - 1].add(c + 1); if (c > 0) p.vlinks[r - 1].add(c); }
+      S.c = Math.min(c + 1, NCOL);
+    } else {
+      for (let cc = c; cc < NCOL; cc++) if (!p.rows[r][cc]) p.rows[r][cc] = new P.Element("H");
+      p.rows[r][NCOL] = el;
+      S.r = r + 1; S.c = 0;
+    }
+    p.ensureRows(S.r + 6);
+    changed(); drawLadder(); seeCursor();
+  }
+  const ED = {
+    ask: (init) => askInput(init, applyText),
+    edit() {
+      if (!guard()) return;
+      const e = S.program.rows[S.r][S.c];
+      askInput(e && e.kind !== "H" ? e.mnemonic() : "", applyText);
+    },
+    hline() {
+      if (!guard() || S.c >= NCOL) return;
+      pushUndo(); S.program.rows[S.r][S.c] = new P.Element("H"); S.c++; changed(); drawLadder();
+    },
+    hlineEnd() {
+      if (!guard()) return;
+      pushUndo();
+      const row = S.program.rows[S.r];
+      for (let cc = S.c; cc < NCOL; cc++) if (!row[cc]) row[cc] = new P.Element("H");
+      S.c = NCOL; changed(); drawLadder();
+    },
+    vline(add) {
+      if (!guard()) return;
+      if (S.c === 0) { status("左母線の位置に縦線は不要です。カーソルを1つ右へ移してください。", true); return; }
+      pushUndo(); S.program.ensureRows(S.r + 2);
+      if (add) S.program.vlinks[S.r].add(S.c); else S.program.vlinks[S.r].delete(S.c);
+      changed(); drawLadder();
+    },
+    del() { if (!guard()) return; pushUndo(); S.program.rows[S.r][S.c] = null; changed(); drawLadder(); },
+    back() { if (S.c > 0) S.c--; ED.del(); },
+    insRow() { if (!guard()) return; pushUndo(); S.program.insertRow(S.r); changed(); drawLadder(); },
+    delRow() { if (!guard()) return; pushUndo(); S.program.deleteRow(S.r); S.program.ensureRows(S.r + 4); changed(); drawLadder(); },
+  };
+
+  canvas.addEventListener("keydown", (e) => {
+    const k = e.key, sh = e.shiftKey;
+    let handled = true;
+    if (e.ctrlKey || e.metaKey) {
+      if (k === "z" || k === "Z") undo(); else handled = false;
+    } else if (k === "ArrowUp") moveTo(S.r - 1, S.c);
+    else if (k === "ArrowDown") moveTo(S.r + 1, S.c);
+    else if (k === "ArrowLeft") moveTo(S.r, S.c - 1);
+    else if (k === "ArrowRight") moveTo(S.r, S.c + 1);
+    else if (k === "Home") moveTo(S.r, 0);
+    else if (k === "End") moveTo(S.r, NCOL);
+    else if (k === "F5") ED.ask(sh ? "LDB " : "LD ");
+    else if (k === "F4") ED.ask(sh ? "ORB " : "OR ");
+    else if (k === "F7") ED.ask(sh ? "OUB " : "OUT ");
+    else if (k === "F8") ED.vline(!sh);
+    else if (k === "-") ED.hline();
+    else if (k === "Enter" && e.altKey) ED.hlineEnd();
+    else if (k === "Enter" && sh) ED.insRow();
+    else if (k === "Enter") ED.edit();
+    else if (k === "Delete" && sh) ED.delRow();
+    else if (k === "Delete") ED.del();
+    else if (k === "Backspace") ED.back();
+    else if (k.length === 1 && /[a-zA-Z]/.test(k) && !e.altKey) ED.ask(k.toUpperCase());
+    else handled = false;
+    if (handled) e.preventDefault();
+  });
+  function canvasPoint(e) {
+    const b = canvas.getBoundingClientRect();
+    return [e.clientX - b.left, e.clientY - b.top];
+  }
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.focus();
+    const [x, y] = canvasPoint(e);
+    [S.r, S.c] = cellAt(x, y);
+    drawLadder();
+  });
+  canvas.addEventListener("dblclick", () => ED.edit());
+
+  // 命令キーのボタン
+  const KEYS = [
+    ["F5", "a接点", () => ED.ask("LD ")], ["Shift+F5", "b接点", () => ED.ask("LDB ")],
+    ["F4", "a接点OR", () => ED.ask("OR ")], ["Shift+F4", "b接点OR", () => ED.ask("ORB ")],
+    ["F7", "コイル", () => ED.ask("OUT ")], ["Shift+F7", "b接点コイル", () => ED.ask("OUB ")],
+    null,
+    ["F8", "縦線", () => ED.vline(true)], ["Shift+F8", "縦線削除", () => ED.vline(false)],
+    ["－", "横線", () => ED.hline()], ["Alt+Enter", "行末まで横線", () => ED.hlineEnd()],
+    null,
+    ["Shift+Enter", "行挿入", () => ED.insRow()], ["Shift+Del", "行削除", () => ED.delRow()],
+    ["Del", "削除", () => ED.del()], ["Ctrl+Z", "元に戻す", () => undo()],
+  ];
+  for (const k of KEYS) {
+    if (!k) { const s = document.createElement("span"); s.className = "sep"; $("keys").append(s); continue; }
+    const b = document.createElement("button");
+    b.className = "key"; b.type = "button";
+    b.innerHTML = `<kbd></kbd><span></span>`;
+    b.querySelector("kbd").textContent = k[0]; b.querySelector("span").textContent = k[1];
+    b.addEventListener("click", () => { canvas.focus(); k[2](); });
+    $("keys").append(b);
+  }
+
+  // ================================================================ 作業盤（SVG）
+  const svg = $("board"), NS = "http://www.w3.org/2000/svg";
+  const it = {};
+  function el(tag, attrs, parent = svg, txt) {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+    if (txt !== undefined) n.textContent = txt;
+    parent.append(n);
+    return n;
+  }
+  const FONT = `"BIZ UDPGothic", "Hiragino Sans", "Meiryo", sans-serif`;
+  const T = (x, y, s, size = 11, attrs = {}) =>
+    el("text", { x, y, "font-size": size, "font-family": FONT, "text-anchor": "middle", fill: "#33403f", ...attrs }, svg, s);
+  const CX0 = 64, CX1 = 536, BY0 = 192, BY1 = 220, WW = 70, WH = 34, Y = 388;
+  const SEG = { 0: "abcdef", 1: "bc", 2: "abged", 3: "abgcd", 4: "fgbc", 5: "afgcd", 6: "afgedc", 7: "abc", 8: "abcdefg", 9: "abcdfg" };
+  const termX = (i) => 22 + i * 18 + (i >= 16 ? 10 : 0);
+  let hoverText = "";
+
+  function buildBoard() {
+    el("defs", {}).innerHTML =
+      `<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dcd5"/><stop offset="1" stop-color="#c3c7bf"/></linearGradient>
+       <radialGradient id="lampGlow"><stop offset="0" stop-color="#ffe2a0"/><stop offset=".6" stop-color="#f5a623"/><stop offset="1" stop-color="#c77700"/></radialGradient>`;
+    el("rect", { x: 4, y: 4, width: 592, height: 484, rx: 8, fill: "url(#steel)", stroke: "#8b9189", "stroke-width": 2 });
+    T(20, 22, "シーケンス制御作業盤", 13, { "text-anchor": "start", "font-weight": 700, fill: "#2f3b3c" });
+    T(178, 22, "シミュレータ", 11, { "text-anchor": "start", fill: "#5d6a68" });
+    // 端子台
+    el("rect", { x: 14, y: 30, width: 572, height: 58, rx: 3, fill: "#2d3436" });
+    const terms = [...P.INPUTS.map((x) => x[0]), ...P.OUTPUTS.map((x) => x[0])];
+    terms.forEach((tb, i) => {
+      const x = termX(i);
+      const g = el("g", { style: "cursor:help" });
+      el("text", { x: x + 8, y: 42, "font-size": 8, "text-anchor": "middle", fill: "#cfd8d6", "font-family": FONT }, g, String(tb));
+      it["tb" + tb] = el("rect", { x, y: 47, width: 16, height: 16, rx: 2, fill: "#b9c2c0" }, g);
+      el("circle", { cx: x + 8, cy: 55, r: 3.5, fill: "none", stroke: "#58615f", "stroke-width": 1 }, g);
+      it["tbw" + tb] = el("path", { d: `M${x + 8} 63 V 84`, stroke: "#2457a6", "stroke-width": 3, fill: "none" }, g);
+      g.addEventListener("pointerenter", () => {
+        const d = S.board.wiring[tb] || "未配線";
+        hoverText = `端子${tb}　${P.TERM_NAME[tb]}（${P.TERM_DESC[tb]}） → ${d}`;
+      });
+      g.addEventListener("pointerleave", () => { hoverText = ""; });
+    });
+    T(22, 100, "入力 1〜16", 9, { "text-anchor": "start", fill: "#4c5957" });
+    T(termX(16), 100, "出力 20〜33　青線は配線あり", 9, { "text-anchor": "start", fill: "#4c5957" });
+    // リレー
+    ["RY1", "RY2"].forEach((n, i) => {
+      const x = 240 + i * 70;
+      el("rect", { x, y: 108, width: 54, height: 36, rx: 3, fill: "#e8ebe6", stroke: "#7c8682" });
+      T(x + 22, 124, n, 11, { "font-weight": 700 });
+      T(x + 27, 139, i ? "右行" : "左行", 9, { fill: "#5d6a68" });
+      it[n] = el("circle", { cx: x + 46, cy: 117, r: 4, fill: "#4d5a5e" });
+    });
+    // コンベア
+    el("rect", { x: CX0 - 16, y: BY0 - 4, width: CX1 - CX0 + 32, height: BY1 - BY0 + 14, rx: 4, fill: "#a6aba3", stroke: "#7d837b" });
+    el("rect", { x: CX0, y: BY0, width: CX1 - CX0, height: BY1 - BY0, fill: "#2f5f4c" });
+    for (const x of [CX0, CX1]) el("circle", { cx: x, cy: (BY0 + BY1) / 2, r: 15, fill: "#7a817b", stroke: "#4a504b" });
+    it.stripes = [];
+    for (let i = 0; i < 14; i++) it.stripes.push(el("line", { y1: BY0 + 3, y2: BY1 - 3, stroke: "#5f9278", "stroke-width": 2 }));
+    for (const [n, x, lv, lab] of [["LS2", CX0 + 6, 1, "左端"], ["LS1", CX1 - 6, -1, "右端"]]) {
+      el("rect", { x: x - 7, y: BY0 - 30, width: 14, height: 16, rx: 2, fill: "#37474f" });
+      it[n + "lv"] = el("line", { x1: x, y1: BY0 - 14, x2: x + 12 * lv, y2: BY0 - 4, "stroke-width": 3, stroke: "#90a4ae", "stroke-linecap": "round" });
+      it[n] = el("circle", { cx: x, cy: BY0 - 39, r: 5, fill: "#555" });
+      T(x, BY0 - 50, `${n} ${lab}`, 10, { "font-weight": 700, "text-anchor": lv > 0 ? "start" : "end", x: x + (lv > 0 ? -6 : 6) });
+    }
+    const wg = el("g", { style: "cursor:grab" });
+    it.work = el("rect", { width: WW, height: WH, rx: 3, fill: "#e0b25a", stroke: "#8d6e2f", "stroke-width": 2 }, wg);
+    it.workT = el("text", { "font-size": 10, "text-anchor": "middle", "dominant-baseline": "middle", "font-family": FONT, fill: "#4a3a14" }, wg, "ワーク");
+    it.workG = wg;
+    let dragDx = 0;
+    wg.addEventListener("pointerdown", (e) => { wg.setPointerCapture(e.pointerId); dragDx = svgX(e) - workLeft(S.board.workX); });
+    wg.addEventListener("pointermove", (e) => {
+      if (!wg.hasPointerCapture(e.pointerId)) return;
+      const span = CX1 - CX0 - 16 - WW;
+      S.board.workX = Math.max(0, Math.min(100, (svgX(e) - dragDx - CX0 - 8) / span * 100));
+    });
+    it.arrow = T((CX0 + CX1) / 2, BY1 + 20, "", 12, { "font-weight": 700, fill: "#b3261e" });
+    [["左端へ", () => place(0)], ["中央へ", () => place(50)], ["右端へ", () => place(100)], ["ワーク有無", () => { S.board.workPresent = !S.board.workPresent; }]]
+      .forEach(([lab, fn], i) => smallButton(70 + i * 82, 250, lab, fn));
+    // 表示灯
+    el("circle", { cx: 44, cy: 302, r: 8, fill: "#43a047", stroke: "#2e7d32" });
+    T(44, 326, "電源", 9);
+    for (let i = 0; i < 4; i++) {
+      const n = "PL" + (i + 1), x = 110 + i * 62;
+      el("circle", { cx: x, cy: 302, r: 15, fill: "#3f3a33" });
+      it[n] = el("circle", { cx: x, cy: 302, r: 12, fill: "#5d4f3a" });
+      T(x, 330, n, 11, { "font-weight": 700 });
+    }
+    T(386, 286, "予備入力（クリックで切替）", 9, { fill: "#4c5957" });
+    ["LS3", "LS4", "LS5"].forEach((n, i) => {
+      const x = 340 + i * 34, g = el("g", { style: "cursor:pointer" });
+      it[n] = el("rect", { x, y: 294, width: 28, height: 18, rx: 3, fill: "#eceff1", stroke: "#78909c" }, g);
+      el("text", { x: x + 14, y: 307, "font-size": 9, "text-anchor": "middle", "font-family": FONT }, g, n);
+      g.addEventListener("click", () => S.board.setSwitch(n, !S.board.sw[n]));
+    });
+    // セレクタスイッチ
+    const y = Y;
+    for (const [n, x, l0, l1, cap] of [["SS0", 50, "手動", "自動", "手動・自動"], ["SS1", 120, "切", "入", "連続運転"]]) {
+      const g = el("g", { style: "cursor:pointer", role: "switch", tabindex: 0, "aria-label": `${n} ${cap}` });
+      el("rect", { x: x - 26, y: y - 26, width: 52, height: 52, rx: 4, fill: "#263238" }, g);
+      el("circle", { cx: x, cy: y, r: 17, fill: "#111", stroke: "#555" }, g);
+      it[n] = el("line", { x1: x, y1: y, x2: x, y2: y - 15, "stroke-width": 6, stroke: "#eee", "stroke-linecap": "round" }, g);
+      g.addEventListener("click", () => S.board.setSwitch(n, !S.board.sw[n]));
+      g.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); S.board.setSwitch(n, !S.board.sw[n]); } });
+      T(x - 20, y - 34, l0, 9); T(x + 20, y - 34, l1, 9);
+      T(x, y + 42, n, 11, { "font-weight": 700 }); T(x, y + 56, cap, 9, { fill: "#4c5957" });
+    }
+    // 押しボタン
+    for (let i = 0; i < 4; i++) {
+      const n = "PB" + (i + 1), x = 190 + i * 56, g = el("g", { style: "cursor:pointer" });
+      el("rect", { x: x - 24, y: y - 22, width: 48, height: 44, rx: 4, fill: "#37474f" }, g);
+      it[n] = el("rect", { x: x - 19, y: y - 17, width: 38, height: 34, rx: 3, fill: "#fafafa", stroke: "#90a4ae", "stroke-width": 2 }, g);
+      it[n + "t"] = el("text", { x, y: y + 4, "font-size": 9, "text-anchor": "middle", "font-family": FONT, fill: "#b3261e" }, g, "");
+      bindPB(g, n);
+      T(x, y + 42, n, 11, { "font-weight": 700 });
+    }
+    const x5 = 420, g5 = el("g", { style: "cursor:pointer" });
+    el("rect", { x: x5 - 27, y: y - 27, width: 54, height: 54, rx: 4, fill: "#fdd835", stroke: "#c6a700" }, g5);
+    it.PB5 = el("circle", { cx: x5, cy: y, r: 21, fill: "#e53935", stroke: "#8e0000", "stroke-width": 2 }, g5);
+    it.PB5t = el("text", { x: x5, y: y + 4, "font-size": 9, "text-anchor": "middle", "font-family": FONT, fill: "#fff" }, g5, "");
+    bindPB(g5, "PB5");
+    T(x5, y + 42, "PB5", 11, { "font-weight": 700 }); T(x5, y + 56, "非常停止", 9, { fill: "#4c5957" });
+    T(300, 462, "押しボタンは押している間ON。右クリック（長押し）で押しっぱなし", 9, { fill: "#4c5957" });
+    // デジタルスイッチ
+    T(478, y - 56, "DSW", 11, { "font-weight": 700 });
+    el("rect", { x: 464, y: y - 44, width: 28, height: 86, rx: 3, fill: "#263238" });
+    it.dsw = el("text", { x: 478, y: y + 7, "font-size": 20, "text-anchor": "middle", fill: "#fff", "font-family": "Consolas, monospace", "font-weight": 700 }, svg, "0");
+    for (const [dy, d, sym] of [[-30, 1, "▲"], [32, -1, "▼"]]) {
+      const tt = el("text", { x: 478, y: y + dy + 4, "font-size": 12, "text-anchor": "middle", fill: "#b0bec5", style: "cursor:pointer" }, svg, sym);
+      tt.addEventListener("click", () => { S.board.dsw = (S.board.dsw + d + 10) % 10; });
+    }
+    // デジタル表示器
+    T(549, y - 56, "DPL2　DPL1", 9);
+    el("rect", { x: 512, y: y - 44, width: 74, height: 86, rx: 3, fill: "#161616" });
+    it.seg2 = sevenSeg(519, y - 25); it.seg1 = sevenSeg(553, y - 25);
+    it.status = el("text", { x: 16, y: 480, "font-size": 11, "font-family": FONT, fill: "#263238" }, svg, "");
+  }
+  function smallButton(x, y, label, fn) {
+    const g = el("g", { style: "cursor:pointer", role: "button", tabindex: 0 });
+    el("rect", { x, y, width: 74, height: 22, rx: 4, fill: "#fafafa", stroke: "#90a4ae" }, g);
+    el("text", { x: x + 37, y: y + 15, "font-size": 10, "text-anchor": "middle", "font-family": FONT }, g, label);
+    g.addEventListener("click", fn);
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+  }
+  function sevenSeg(x, y, w = 26, h = 48, t = 4) {
+    const r = {
+      a: [x + t, y, w - 2 * t, t], b: [x + w - t, y + t, t, h / 2 - t - 1], c: [x + w - t, y + h / 2 + 1, t, h / 2 - t - 1],
+      d: [x + t, y + h - t, w - 2 * t, t], e: [x, y + h / 2 + 1, t, h / 2 - t - 1], f: [x, y + t, t, h / 2 - t - 1],
+      g: [x + t, y + h / 2 - t / 2, w - 2 * t, t],
+    };
+    const o = {};
+    for (const [k, [a, b, c, d]] of Object.entries(r)) o[k] = el("rect", { x: a, y: b, width: c, height: d, rx: 1, fill: "#3a1010" });
+    return o;
+  }
+  function bindPB(g, n) {
+    g.addEventListener("pointerdown", (e) => { if (e.button !== 0) return; g.setPointerCapture(e.pointerId); S.board.setSwitch(n, true); });
+    const up = () => S.board.setSwitch(n, false);
+    g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+    g.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      if (S.board.locked.has(n)) S.board.locked.delete(n); else S.board.locked.add(n);
+    });
+  }
+  function svgX(e) {
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  const workLeft = (x) => CX0 + 8 + x / 100 * (CX1 - CX0 - 16 - WW);
+  function place(x) { S.board.workPresent = true; S.board.workX = x; }
+
+  function refreshBoard() {
+    const b = S.board, at = (n, k, v) => n.setAttribute(k, v);
+    for (const [tb, n] of P.INPUTS) { at(it["tb" + tb], "fill", b.input(n) ? "#ff9800" : "#b9c2c0"); at(it["tbw" + tb], "visibility", b.wiring[tb] ? "visible" : "hidden"); }
+    for (const [tb, n] of P.OUTPUTS) { at(it["tb" + tb], "fill", b.outputs[n] ? "#ff4b3e" : "#b9c2c0"); at(it["tbw" + tb], "visibility", b.wiring[tb] ? "visible" : "hidden"); }
+    for (const n of ["RY1", "RY2"]) at(it[n], "fill", b.outputs[n] ? "#ff5252" : "#4d5a5e");
+    for (let i = 1; i <= 4; i++) at(it["PL" + i], "fill", b.outputs["PL" + i] ? "url(#lampGlow)" : "#5d4f3a");
+    const span = CX1 - CX0;
+    it.stripes.forEach((s, i) => {
+      const x = CX0 + ((i * span / 14 + b.belt / 100 * span) % span);
+      at(s, "x1", x); at(s, "x2", x);
+    });
+    const wl = workLeft(b.workX);
+    at(it.work, "x", wl); at(it.work, "y", BY0 - WH);
+    at(it.workT, "x", wl + WW / 2); at(it.workT, "y", BY0 - WH / 2);
+    at(it.workG, "visibility", b.workPresent ? "visible" : "hidden");
+    for (const n of ["LS1", "LS2"]) {
+      const v = b.input(n);
+      at(it[n], "fill", v ? "#ff3d00" : "#555"); at(it[n + "lv"], "stroke", v ? "#ff7043" : "#90a4ae");
+    }
+    it.arrow.textContent = { 左行: "◀◀　左行", 右行: "右行　▶▶" }[b.motor] || "";
+    for (const n of ["LS3", "LS4", "LS5"]) at(it[n], "fill", b.input(n) ? "#ffcc80" : "#eceff1");
+    for (const [n, x] of [["SS0", 50], ["SS1", 120]]) {
+      const on = b.sw[n];
+      at(it[n], "x2", on ? x + 11 : x - 11); at(it[n], "y2", Y - 11);
+    }
+    for (let i = 1; i <= 5; i++) {
+      const n = "PB" + i, v = b.input(n);
+      at(it[n], "fill", n === "PB5" ? (v ? "#a31515" : "#e53935") : (v ? "#aeb9bd" : "#fafafa"));
+      it[n + "t"].textContent = b.locked.has(n) ? "LOCK" : "";
+    }
+    it.dsw.textContent = String(b.dsw);
+    for (const k of [1, 2]) {
+      const lit = SEG[b.dpl(k)] || "";
+      for (const [s, node] of Object.entries(it["seg" + k])) at(node, "fill", lit.includes(s) ? "#ff3b30" : "#3a1010");
+    }
+    let st = `モータ：${b.motor}　ワーク位置：${Math.round(b.workX)}%`;
+    if (b.alarm) st = "⚠ " + b.alarm; else if (hoverText) st = hoverText;
+    it.status.textContent = st;
+    at(it.status, "fill", b.alarm ? "#b3261e" : "#263238");
+  }
+
+  // ================================================================ RUN / STOP
+  function setMode() {
+    $("mode").classList.toggle("run", S.running);
+    $("modeText").textContent = S.running ? "RUN" : "PROGRAM";
+    for (const inp of document.querySelectorAll("#monBody input")) inp.disabled = S.running;
+  }
+  async function run() {
+    if (S.running) return;
+    const w = S.program.check();
+    if (w.length && !(await confirmBox("プログラムチェック", w.join("\n") + "\n\nこのまま RUN しますか？"))) return;
+    S.engine.program = S.program; S.engine.reset(); S.running = true;
+    setMode(); drawLadder();
+    status("RUN中：作業盤を操作して動きを確かめてください。STOPで編集に戻ります。");
+  }
+  function stop() {
+    if (!S.running) return;
+    S.running = false; S.board.exchangeOutputs(S.mem, false);
+    setMode(); drawLadder(); status("STOP：編集できます。");
+  }
+  $("btnRun").onclick = run;
+  $("btnStop").onclick = stop;
+
+  let last = performance.now(), frame = 0;
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+    if (S.running) {
+      const steps = Math.max(1, Math.round(dt * 100)), sdt = dt * 1000 / steps;
+      for (let i = 0; i < steps; i++) {
+        S.board.exchangeInputs(S.mem); S.engine.scan(sdt); S.board.exchangeOutputs(S.mem, true); S.board.step(sdt / 1000);
+      }
+    } else {
+      S.board.exchangeOutputs(S.mem, false); S.board.step(dt);
+    }
+    refreshBoard();
+    frame++;
+    if (S.running && frame % 6 === 0) drawLadder();
+    if (frame % 12 === 0) refreshMonitorValues();
+    requestAnimationFrame(loop);
+  }
+
+  // ================================================================ タブ
+  for (const t of document.querySelectorAll(".tab")) {
+    t.addEventListener("click", () => {
+      for (const u of document.querySelectorAll(".tab")) u.setAttribute("aria-selected", u === t ? "true" : "false");
+      for (const id of ["task", "mon", "wire"]) $("tab-" + id).hidden = id !== t.dataset.tab;
+      if (t.dataset.tab === "wire") fillWiring();
+      if (t.dataset.tab === "mon") rebuildMonitor();
+    });
+  }
+
+  // ---------------- モニタとコメント
+  const devOrder = { R: 0, MR: 1, LR: 2, T: 3, C: 4, DM: 5, CR: 6 };
+  const devKey = (d) => { const m = /^([A-Z]+)(\d+)$/.exec(d); return m ? [devOrder[m[1]] ?? 9, +m[2]] : [9, 0]; };
+  let monKey = "", monTimer = 0;
+  function monitorDevices() {
+    const s = new Set([...S.program.usedDevices(), ...Object.values(S.board.wiring), ...Object.keys(S.program.comments)]);
+    return [...s].sort((a, b) => { const x = devKey(a), y = devKey(b); return x[0] - y[0] || x[1] - y[1]; });
+  }
+  function rebuildMonitorSoon() { clearTimeout(monTimer); monTimer = setTimeout(rebuildMonitor, 300); }
+  function rebuildMonitor() {
+    const devs = monitorDevices(), key = devs.join(",");
+    if (key === monKey) return refreshMonitorValues();
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest("#monBody")) return;
+    monKey = key;
+    const body = $("monBody");
+    body.textContent = "";
+    for (const d of devs) {
+      const tr = document.createElement("tr"); tr.dataset.dev = d;
+      tr.innerHTML = `<td class="dev"></td><td class="val">-</td><td><input aria-label="コメント"></td>`;
+      tr.children[0].textContent = d;
+      const inp = tr.querySelector("input");
+      inp.value = S.program.comments[d] || "";
+      inp.disabled = S.running;
+      inp.addEventListener("change", () => {
+        pushUndo();
+        const v = inp.value.trim();
+        if (v) S.program.comments[d] = v; else delete S.program.comments[d];
+        changed(); drawLadder();
+      });
+      body.append(tr);
+    }
+    refreshMonitorValues();
+  }
+  function refreshMonitorValues() {
+    if ($("tab-mon").hidden) return;
+    for (const tr of $("monBody").children) {
+      const v = S.running ? S.mem.describe(tr.dataset.dev) : "-";
+      if (tr.children[1].textContent !== v) tr.children[1].textContent = v;
+      tr.classList.toggle("on", v.startsWith("ON"));
+    }
+  }
+
+  // ---------------- 配線
+  const wireInputs = {};
+  function buildWiring() {
+    const grid = $("wireGrid");
+    for (const [title, list] of [["入力（端子 1〜16）", P.INPUTS], ["出力（端子 20〜33）", P.OUTPUTS]]) {
+      const col = document.createElement("div");
+      const h = document.createElement("h3"); h.textContent = title; col.append(h);
+      for (const [tb, n, d] of list) {
+        const row = document.createElement("div"); row.className = "wire-row";
+        row.innerHTML = `<b></b><span></span><small></small><input spellcheck="false" autocomplete="off">`;
+        row.children[0].textContent = tb; row.children[1].textContent = n; row.children[2].textContent = d;
+        row.children[3].setAttribute("aria-label", `端子${tb} ${n} の配線先`);
+        wireInputs[tb] = row.children[3];
+        col.append(row);
+      }
+      grid.append(col);
+    }
+    for (const name of Object.keys(P.WIRING_PRESETS)) {
+      const o = document.createElement("option"); o.value = o.textContent = name; $("presetSel").append(o);
+    }
+  }
+  function fillWiring(w = S.board.wiring) {
+    for (const [tb, inp] of Object.entries(wireInputs)) { inp.value = w[tb] || ""; inp.classList.remove("bad"); }
+    $("wireErr").textContent = "";
+  }
+  $("btnPreset").onclick = () => fillWiring(P.WIRING_PRESETS[$("presetSel").value]);
+  $("btnWireClear").onclick = () => fillWiring({});
+  $("btnWireApply").onclick = () => {
+    const nw = {}, errs = [];
+    for (const [tb, inp] of Object.entries(wireInputs)) {
+      inp.classList.remove("bad");
+      const v = inp.value.trim();
+      if (!v) continue;
+      try {
+        const d = P.parseDevice(v);
+        if (P.devType(d) !== "R") throw new P.DeviceError(`入出力には R リレーを使います（${d}）`);
+        nw[tb] = d;
+      } catch (e) { errs.push(`端子${tb}：${e.message}`); inp.classList.add("bad"); }
+    }
+    const ins = new Set(P.INPUTS.map(([tb]) => nw[tb]).filter(Boolean));
+    const outs = P.OUTPUTS.map(([tb]) => nw[tb]).filter(Boolean);
+    for (const d of new Set(outs)) {
+      if (ins.has(d)) errs.push(`${d} が入力と出力の両方に配線されています`);
+      if (outs.filter((x) => x === d).length > 1) errs.push(`${d} が複数の出力端子に配線されています`);
+    }
+    if (errs.length) { $("wireErr").textContent = errs.join("\n"); return; }
+    S.board.wiring = nw;
+    if ($("wireCmt").checked) {
+      for (const [tb, n, d] of [...P.INPUTS, ...P.OUTPUTS]) {
+        const a = nw[tb];
+        if (a && !S.program.comments[a]) S.program.comments[a] = `${n} ${d}`;
+      }
+    }
+    changed(); drawLadder();
+    $("wireErr").textContent = "";
+    status("配線を変更しました。");
+  };
+
+  // ---------------- 課題
+  const taskSel = $("taskSel");
+  TASKS.LIST.forEach((t, i) => { const o = document.createElement("option"); o.value = t.id; o.textContent = t.title; taskSel.append(o); });
+  taskSel.value = TASKS.LIST[TASKS.LIST.length - 1].id;
+  const curTask = () => TASKS.LIST.find((t) => t.id === taskSel.value) || TASKS.LIST[0];
+  function showTask() {
+    const t = curTask(), w = TASKS.presetWiring(t), body = $("taskBody");
+    body.textContent = "";
+    const p = document.createElement("p"); p.className = "task-text"; p.textContent = t.text; body.append(p);
+    const tbl = document.createElement("table"); tbl.className = "iotable";
+    tbl.innerHTML = "<caption style='text-align:left;font-weight:700;padding-bottom:2px'>I/O割付表</caption><tr><th>機器</th><th>端子</th><th>アドレス</th><th>用途</th></tr>";
+    for (const [tb, n] of [...P.INPUTS, ...P.OUTPUTS]) {
+      if (!w[tb] || !t.required.includes(n)) continue;
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td></td><td></td><td class='addr'></td><td></td>";
+      tr.children[0].textContent = n; tr.children[1].textContent = tb; tr.children[2].textContent = w[tb];
+      tr.children[3].textContent = (t.comments[w[tb]] || "").replace(/^\S+\s?/, "");
+      tbl.append(tr);
+    }
+    body.append(tbl);
+    const det = document.createElement("details"); det.className = "hint";
+    det.innerHTML = "<summary>ヒントを見る</summary>";
+    const hp = document.createElement("p"); hp.textContent = t.hint; det.append(hp);
+    body.append(det);
+    $("judgeOut").textContent = "";
+  }
+  taskSel.addEventListener("change", () => { showTask(); changed(); });
+  $("btnTaskWire").onclick = () => {
+    const t = curTask();
+    S.board.wiring = TASKS.presetWiring(t);
+    for (const [d, c] of Object.entries(t.comments)) if (!S.program.comments[d]) S.program.comments[d] = c;
+    fillWiring(); changed(); drawLadder();
+    status(`配線を「${t.wiring}」にしました。`);
+  };
+  $("btnTaskSample").onclick = async () => {
+    if (!(await confirmBox("解答例を開く", "今のラダーを解答例で置き換えます。まず自分で作ってから見比べるのがおすすめです。\n（置き換えた後も「元に戻す」で戻せます）"))) return;
+    stop();
+    const t = curTask();
+    pushUndo();
+    const p = t.sample();
+    p.comments = { ...t.comments, ...p.comments };
+    p.ensureRows(Math.max(24, p.nrows() + 6));
+    S.r = 0; S.c = 0;
+    setProgram(p);
+    S.board.wiring = TASKS.presetWiring(t);
+    fillWiring(); changed();
+  };
+  $("btnJudge").onclick = () => {
+    const t = curTask();
+    const res = TASKS.judge(t, S.program.toJSON(), { ...S.board.wiring });
+    const ok = res.filter((r) => r[1]).length;
+    const out = $("judgeOut");
+    out.textContent = "";
+    const sc = document.createElement("div"); sc.className = "score";
+    sc.textContent = ok === res.length ? `${ok} / ${res.length}　すべて合格です` : `${ok} / ${res.length} 合格`;
+    out.append(sc);
+    const ul = document.createElement("ul"); ul.className = "result";
+    for (const [title, pass, msg] of res) {
+      const li = document.createElement("li"); li.className = pass ? "ok" : "ng";
+      const m = document.createElement("span"); m.className = "mark"; m.textContent = pass ? "○" : "×";
+      li.append(m, document.createTextNode(title));
+      if (!pass) { const w = document.createElement("span"); w.className = "why"; w.textContent = msg; li.append(w); }
+      ul.append(li);
+    }
+    out.append(ul);
+    status(`自動判定：${ok} / ${res.length} 合格`);
+  };
+
+  // ================================================================ ファイル
+  $("btnNew").onclick = async () => {
+    if (!(await confirmBox("新規", "今のラダーを消して新しく始めます。よろしいですか？"))) return;
+    stop(); pushUndo(); S.r = 0; S.c = 0; setProgram(new P.Program()); changed();
+  };
+  $("btnOpen").onclick = () => $("fileInput").click();
+  $("fileInput").addEventListener("change", async (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    try { loadProject(JSON.parse(await f.text())); changed(); status(`「${f.name}」を開きました。`); }
+    catch (ex) { status("このファイルは開けません（PLC検定トレーナーで保存したJSONファイルを選んでください）。", true); }
+  });
+  let downloads = null;
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("downloads").then((d) => { downloads = d; }).catch(() => {});
+  }
+  $("btnSave").onclick = async () => {
+    const data = JSON.stringify(projectJSON(), null, 1);
+    const name = `ladder-${new Date().toISOString().slice(0, 10)}.json`;
+    if (downloads) {
+      try { await downloads.save({ filename: name, data }); status("ファイルに保存しました。"); }
+      catch (e) { if (e && e.code !== "declined") status("保存できませんでした。", true); }
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+    a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    status("ファイルに保存しました。");
+  };
+
+  // ================================================================ 操作説明
+  const HELP = [
+    ["ラダーの入力（KV STUDIO と同じキー）", [
+      ["F5 / Shift+F5", "a接点 / b接点"], ["F4 / Shift+F4", "a接点OR / b接点OR"],
+      ["F7 / Shift+F7", "コイル / b接点コイル"], ["F8 / Shift+F8", "縦線（カーソルの左端から下の行へ）/ 縦線削除"],
+      ["－", "横線"], ["Alt+Enter", "コイルの手前まで横線"], ["Shift+Enter / Shift+Delete", "行挿入 / 行削除"],
+      ["Enter・ダブルクリック", "セルを編集"], ["Delete / Backspace", "セルを削除"], ["Ctrl+Z", "元に戻す"],
+      ["英字キー", "直接入力（A 0 → LD R000、O 300 → OUT R300、TMR 0 #10 → 1.0秒タイマ）"],
+    ]],
+  ];
+  function buildHelp() {
+    const b = $("helpBody");
+    const sec = (title, html) => { const h = document.createElement("h3"); h.textContent = title; b.append(h); if (html) b.append(html); };
+    for (const [title, rows] of HELP) {
+      const g = document.createElement("div"); g.className = "help-grid";
+      for (const [k, v] of rows) { const c = document.createElement("code"); c.textContent = k; const s = document.createElement("span"); s.textContent = v; g.append(c, s); }
+      sec(title, g);
+    }
+    const para = (t, s) => { const p = document.createElement("p"); p.textContent = s; sec(t, p); };
+    para("デバイス", "数字だけのデバイスは R リレーとして扱います（下2桁 00〜15 がビット番号）。内部リレーは MR、タイマは T、カウンタは C、データメモリは DM。CR2002 は常時ON、CR2008 はRUN直後の1スキャンだけON。");
+    para("OR回路（自己保持）の作り方", "1行目で A 5 → B 6 → O 302 と入力します（コイルを入れると横線は自動で引かれます）。2行目の先頭で F4 → 302 と入力すると、1行目の最初の接点と並列になります。");
+    para("シミュレーション", "RUN で開始。ONしている接点・コイルが緑になります。押しボタンは押している間ON、右クリック（スマホ・タブレットは長押し）で押しっぱなし。ワークはドラッグで動かせます。SS0・SS1 はクリックで切替、DSW は ▲▼。RUN中は編集できません。");
+    para("配線", "「配線」タブで、作業盤の端子台（入力1〜16、出力20〜33）と PLC のアドレスを結びます。検定では課題ごとにI/O割付が変わるので、割付表を見て自分で配線する練習ができます。端子台にマウスを乗せると配線先が表示されます。");
+    para("作業盤の前提", "LS1 は右端、LS2 は左端、RY1 は左行、RY2 は右行、SS0 は ON で自動。コンベアは端から端まで約4秒。RY1 と RY2 が同時にONすると警告を出して止まります。");
+    para("保存", "作業内容はこのブラウザに自動で保存されます。別の端末に移すときは「ファイルに保存」で書き出し、「開く」で読み込みます。");
+    para("このソフトについて", "非公式の学習用ソフトです。キー操作は KV STUDIO（株式会社キーエンスの製品）を参考にしていますが、キーエンス社・作業盤メーカー・中央職業能力開発協会とは関係ありません。収録課題はすべてオリジナルです。");
+  }
+  $("btnHelp").onclick = () => $("dlgHelp").showModal();
+  $("helpClose").onclick = () => $("dlgHelp").close();
+
+  // ================================================================ 起動
+  buildBoard(); buildWiring(); buildHelp();
+  try {
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved) {
+      const d = JSON.parse(saved);
+      loadProject(d);
+      if (d.task && TASKS.LIST.some((t) => t.id === d.task)) taskSel.value = d.task;
+    } else {
+      S.board.wiring = TASKS.presetWiring(curTask());
+    }
+  } catch (e) { /* 保存データなし */ }
+  fillWiring(); showTask(); setMode(); drawLadder(); rebuildMonitor();
+  status(DEFAULT_STATUS);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawLadder);
+  let rz = 0;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(drawLadder, 100); });
+  canvas.focus({ preventScroll: true });
+  requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>
